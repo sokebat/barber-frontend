@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { useCart } from "@/contexts/cart-context"
-import { Minus, Plus, Trash2 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { useCart } from "@/contexts/cart-context";
+import { Minus, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 
- 
 const items = {
   products: {
     "1": {
@@ -23,20 +29,20 @@ const items = {
       duration: "45 min",
     },
   },
-}
+};
 
 export default function CartPage() {
-  const { items: cartItems, updateQuantity, removeItem } = useCart()
+  const { items: cartItems, updateQuantity, removeItem } = useCart();
 
   const subtotal = cartItems.reduce((total, item) => {
-    const product = items.products[item.id as keyof typeof items.products]
-    const service = items.services[item.id as keyof typeof items.services]
-    const price = product?.price || service?.price || 0
-    return total + price * item.quantity
-  }, 0)
+    const product = items.products[item.id as keyof typeof items.products];
+    const service = items.services[item.id as keyof typeof items.services];
+    const price = product?.price || service?.price || 0;
+    return total + price * item.quantity;
+  }, 0);
 
-  const tax = subtotal * 0.1 // 10% tax
-  const total = subtotal + tax
+  const tax = subtotal * 0.1; // 10% tax
+  const total = subtotal + tax;
 
   return (
     <div className="container py-10">
@@ -49,24 +55,41 @@ export default function CartPage() {
             </CardHeader>
             <CardContent className="grid gap-4">
               {cartItems.map((item) => {
-                const product = items.products[item.id as keyof typeof items.products]
-                const service = items.services[item.id as keyof typeof items.services]
-                const itemData = product || service
+                const product =
+                  items.products[item.id as keyof typeof items.products];
+                const service =
+                  items.services[item.id as keyof typeof items.services];
+                const itemData = product || service;
 
-                if (!itemData) return null
+                if (!itemData) return null;
 
                 return (
-                  <div key={item.id} className="flex items-center justify-between space-x-4">
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between space-x-4"
+                  >
                     <div className="flex items-center space-x-4">
                       {product && (
                         <div className="relative h-16 w-16 overflow-hidden rounded">
-                          <img src={product.image || "/placeholder.svg"} alt={product.name} className="object-cover" />
+                          <Image
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            width={500}
+                            height={500}
+                            className="object-cover"
+                          />
                         </div>
                       )}
                       <div>
                         <p className="font-medium">{itemData.name}</p>
-                        <p className="text-sm text-muted-foreground">${itemData.price}</p>
-                        {service && <p className="text-sm text-muted-foreground">Duration: {service.duration}</p>}
+                        <p className="text-sm text-muted-foreground">
+                          ${itemData.price}
+                        </p>
+                        {service && (
+                          <p className="text-sm text-muted-foreground">
+                            Duration: {service.duration}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -75,7 +98,12 @@ export default function CartPage() {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          onClick={() =>
+                            updateQuantity(
+                              item.id,
+                              Math.max(1, item.quantity - 1)
+                            )
+                          }
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -83,24 +111,36 @@ export default function CartPage() {
                           type="number"
                           min="1"
                           value={item.quantity}
-                          onChange={(e) => updateQuantity(item.id, Number.parseInt(e.target.value) || 1)}
+                          onChange={(e) =>
+                            updateQuantity(
+                              item.id,
+                              Number.parseInt(e.target.value) || 1
+                            )
+                          }
                           className="h-8 w-16 text-center"
                         />
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() =>
+                            updateQuantity(item.id, item.quantity + 1)
+                          }
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => removeItem(item.id)}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => removeItem(item.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                )
+                );
               })}
             </CardContent>
           </Card>
@@ -132,6 +172,5 @@ export default function CartPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

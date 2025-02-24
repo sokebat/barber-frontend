@@ -14,7 +14,7 @@ export function BookingSection() {
       <div className="flex flex-col items-center gap-4 text-center">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Book Your Appointment</h2>
         <p className="max-w-[600px] text-muted-foreground">
-          Select your preferred service, date, and time. We'll take care of the rest.
+          Select your preferred service, date, and time. We&apos;ll take care of the rest.
         </p>
       </div>
       <Card className="mx-auto mt-12 max-w-[800px]">

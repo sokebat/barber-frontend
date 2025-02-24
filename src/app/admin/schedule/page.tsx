@@ -1,38 +1,53 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import * as React from "react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
 
-const scheduleData = {
-  "2024-02-24": [
-    {
-      id: "1",
-      time: "09:00 AM",
-      customer: "John Smith",
-      service: "Haircut",
-      staff: "Mike Wilson",
-      status: "confirmed",
-    },
-    {
-      id: "2",
-      time: "10:30 AM",
-      customer: "Sarah Johnson",
-      service: "Massage",
-      staff: "Jane Doe",
-      status: "pending",
-    },
-  ],
-}
+// const scheduleData = {
+//   "2024-02-24": [
+//     {
+//       id: "1",
+//       time: "09:00 AM",
+//       customer: "John Smith",
+//       service: "Haircut",
+//       staff: "Mike Wilson",
+//       status: "confirmed",
+//     },
+//     {
+//       id: "2",
+//       time: "10:30 AM",
+//       customer: "Sarah Johnson",
+//       service: "Massage",
+//       staff: "Jane Doe",
+//       status: "pending",
+//     },
+//   ],
+// };
 
 export default function ScheduleManagement() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date())
-  const [selectedStaff, setSelectedStaff] = React.useState<string>("all")
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [selectedStaff, setSelectedStaff] = React.useState<string>("all");
 
-  const appointments = scheduleData[date?.toISOString().split("T")[0] || ""] || []
+  // const appointments = scheduleData[date?.toISOString().split("T")[0] || ""] || []
+
+  // const appointments = scheduleData[date?.toISOString().split("T")[0] || ""] || []
+  
 
   return (
     <div className="container py-10">
@@ -42,10 +57,17 @@ export default function ScheduleManagement() {
             <Card>
               <CardHeader>
                 <CardTitle>Schedule View</CardTitle>
-                <CardDescription>Select a date to view appointments</CardDescription>
+                <CardDescription>
+                  Select a date to view appointments
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  className="rounded-md border"
+                />
               </CardContent>
             </Card>
 
@@ -56,7 +78,10 @@ export default function ScheduleManagement() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Staff Member</label>
-                  <Select value={selectedStaff} onValueChange={setSelectedStaff}>
+                  <Select
+                    value={selectedStaff}
+                    onValueChange={setSelectedStaff}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select staff" />
                     </SelectTrigger>
@@ -104,7 +129,7 @@ export default function ScheduleManagement() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 {appointments.length > 0 ? (
                   appointments.map((appointment) => (
                     <div key={appointment.id} className="flex items-center justify-between rounded-lg border p-4">
@@ -133,12 +158,11 @@ export default function ScheduleManagement() {
                 ) : (
                   <div className="text-center text-muted-foreground">No appointments scheduled for this date.</div>
                 )}
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -2,12 +2,12 @@
 
 import * as React from "react"
 import Image from "next/image"
-import { ShoppingCart } from "lucide-react"
+// import { ShoppingCart } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+// import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useCart } from "@/contexts/cart-context"
+// import { useCart } from "@/contexts/cart-context"
 import type { Product } from "@/lib/types"
 
 const products: Product[] = [

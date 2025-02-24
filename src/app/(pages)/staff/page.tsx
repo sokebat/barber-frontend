@@ -59,7 +59,7 @@ export default function StaffDashboard() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Today's Schedule</CardTitle>
+              <CardTitle>Today&apos;s Schedule</CardTitle>
               <CardDescription>You have {appointments.length} appointments today</CardDescription>
             </CardHeader>
             <CardContent>

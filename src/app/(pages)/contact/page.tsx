@@ -50,8 +50,8 @@ export default function ContactPage() {
           Contact Us
         </h1>
         <p className="max-w-[600px] text-muted-foreground">
-          Have questions? We'd love to hear from you. Send us a message and
-          we'll respond as soon as possible.
+          Have questions? We&apos;d love to hear from you. Send us a message and
+          we&apos;ll respond as soon as possible.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function ContactPage() {
           <CardHeader>
             <CardTitle>Send us a Message</CardTitle>
             <CardDescription>
-              Fill out the form below and we'll get back to you
+              Fill out the form below and we&apos;ll get back to you
             </CardDescription>
           </CardHeader>
           <CardContent>

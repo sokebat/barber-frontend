@@ -37,7 +37,7 @@ export function TestimonialsSection() {
         <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">What Our Clients Say</h2>
           <p className="max-w-[600px] text-muted-foreground">
-            Don't just take our word for it. Here's what our valued clients have to say about their experiences.
+            Don&apos;t just take our word for it. Here&apos;s what our valued clients have to say about their experiences.
           </p>
         </div>
         <div className="mt-12">

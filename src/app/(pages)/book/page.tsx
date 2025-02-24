@@ -36,7 +36,7 @@ export default function ContactPage() {
       <div className="flex flex-col items-center gap-4 text-center mb-10">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Contact Us</h1>
         <p className="max-w-[600px] text-muted-foreground">
-          Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+          Have questions? We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export default function ContactPage() {
         <Card>
           <CardHeader>
             <CardTitle>Send us a Message</CardTitle>
-            <CardDescription>Fill out the form below and we'll get back to you</CardDescription>
+            <CardDescription>Fill out the form below and we&apos;ll get back to you</CardDescription>
           </CardHeader>
           <CardContent>
             <form className="space-y-4">
