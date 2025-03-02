@@ -5,13 +5,11 @@ import { TestimonialsSection } from "@/components/testimonials-section";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1 overflow-x-hidden ">
-        <HeroSection />
-        <ServicesSection />
-        <BookingSection />
-        <TestimonialsSection />
-      </main>
+    <div className="flex  pb-4 gap-6   w-full flex-col">
+      <HeroSection />
+      <ServicesSection />
+
+      <TestimonialsSection />
     </div>
   );
 }

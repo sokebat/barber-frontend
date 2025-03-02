@@ -1,16 +1,30 @@
-import { Button } from "@/components/ui/button"
-
+import { Button } from "@/components/ui/button";
+import { HeroSectionImage } from "@/constants/image";
+import Image from "next/image";
 export function HeroSection() {
   return (
-    <section className="relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-background to-background/50" />
-      <div className="relative grid min-h-[600px] items-center justify-center bg-[url('/placeholder.svg?height=600&width=1200')] bg-cover bg-center bg-no-repeat px-4 py-24">
-        <div className="container">
-          <div className="grid max-w-lg gap-4">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Experience Luxury
-              <br />
-              Grooming & Wellness
+    <section className="w-full">
+      <div>
+        <div
+          className="max-w-[1400px] relative  mx-auto min-h-screen text-white 2xl:min-h-max pt-16  px-3 2xl:py-20 "
+          style={{
+            backgroundImage: `url(${HeroSectionImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <Image
+            src={HeroSectionImage}
+            alt="Hero Section Image"
+            layout="fill"
+            objectFit="cover"
+            objectPosition="center"
+            className="absolute inset-0 z-[-1]"
+          />
+          <div className="grid max-w-xl gap-4">
+            <h1 className="text-4xl font-bold tracking-tight  ">
+              Experience Luxury Grooming
+              <br />& Wellness
             </h1>
             <p className="text-lg text-muted-foreground">
               Premium barber services and spa treatments tailored to your needs.
@@ -25,6 +39,5 @@ export function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
-

@@ -32,8 +32,8 @@ const testimonials = [
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-muted/50 py-24">
-      <div className="container">
+    <section className="w-full">
+      <div className="max-w-[1400px] mx-auto">
         <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">What Our Clients Say</h2>
           <p className="max-w-[600px] text-muted-foreground">

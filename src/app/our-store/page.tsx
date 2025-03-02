@@ -1,14 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-// import { ShoppingCart } from "lucide-react"
+import * as React from "react";
+import Image from "next/image";
 
-// import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-// import { useCart } from "@/contexts/cart-context"
-import type { Product } from "@/lib/types"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+import type { Product } from "@/lib/types";
 
 const products: Product[] = [
   {
@@ -30,19 +41,21 @@ const products: Product[] = [
     stock: 35,
   },
   // Add more products...
-]
+];
 
 export default function StorePage() {
   // const { addItem } = useCart()
-  const [category, setCategory] = React.useState<string>("all")
+  const [category, setCategory] = React.useState<string>("all");
 
   const filteredProducts =
     category === "all"
       ? products
-      : products.filter((product) => product.category.toLowerCase() === category.toLowerCase())
+      : products.filter(
+          (product) => product.category.toLowerCase() === category.toLowerCase()
+        );
 
   return (
-    <div className="container py-10">
+    <div className=" max-w-[1400px] mx-auto">
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Shop</h1>
@@ -88,6 +101,5 @@ export default function StorePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -4,8 +4,8 @@ import { Facebook, Instagram, Twitter } from "lucide-react"
 export function Footer() {
   return (
     <footer className="border-t bg-muted/50">
-      <div className="container py-12">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className=" py-5">
+        <div className="grid gap-8 max-w-[1400px] mx-auto sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <h3 className="mb-4 text-lg font-semibold">About Us</h3>
             <p className="text-sm text-muted-foreground">
@@ -61,8 +61,8 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-          <p>© 2024 LuxeCuts & Spa. All rights reserved.</p>
+        <div className="mt-8 border-t py-2 text-center text-sm text-muted-foreground">
+          <p className="">© 2024 LuxeCuts & Spa. All rights reserved.</p>
         </div>
       </div>
     </footer>

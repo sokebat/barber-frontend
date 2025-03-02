@@ -7,17 +7,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navigation = [
   { name: "Home", href: "/" },
+  { name: "About", href: "/about" },
   { name: "Services", href: "/services" },
   { name: "Store", href: "/our-store" },
-  { name: "Book Appointment", href: "/book" },
-  { name: "About", href: "/about" },
   { name: "Contact", href: "/contact" },
 ];
 
 export function MainNav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="max-w-[1400px] mx-auto flex h-16 items-center">
         <Sheet>
           <SheetTrigger asChild>
             <Button
@@ -30,7 +29,7 @@ export function MainNav() {
           </SheetTrigger>
           <SheetContent side="left" className="pl-1 pr-0">
             <div className="px-7">
-              <Link href="/" className="flex items-center" onClick={() => {}}>
+              <Link href="/" className="flex items-center"  >
                 <span className="font-bold">LuxeCuts & Spa</span>
               </Link>
             </div>
@@ -75,7 +74,9 @@ export function MainNav() {
           <Button variant="ghost" size="icon">
             <User className="h-5 w-5" />
           </Button>
-          <Button className="hidden lg:inline-flex">Book Now</Button>
+          <Link href="/book" className="block">
+            <Button className="hidden lg:inline-flex">Book Now</Button>
+          </Link>
         </div>
       </div>
     </header>

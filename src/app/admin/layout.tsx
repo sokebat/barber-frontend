@@ -12,7 +12,7 @@ const navigation = [
   { name: "Schedule", href: "/admin/schedule", icon: Calendar },
   { name: "Services", href: "/admin/services", icon: Scissors },
   { name: "Notifications", href: "/admin/notifications", icon: MessageSquare },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  // { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 
 export default function AdminLayout({
@@ -23,7 +23,7 @@ export default function AdminLayout({
   const pathname = usePathname()
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen max-w-[1400px] mx-auto">
       <div className="hidden w-64 flex-col border-r bg-muted/50 lg:flex">
         <div className="flex h-14 items-center border-b px-4">
           <span className="font-semibold">Admin Dashboard</span>
