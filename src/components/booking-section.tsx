@@ -44,7 +44,7 @@ export function BookingSection() {
             Book Your Appointment
           </h2>
           <p className="max-w-[600px] text-muted-foreground">
-            Select your preferred service, date, and time. We'll take care of
+            Select your preferred service, date, and time. We&apos;ll take care of
             the rest.
           </p>
         </div>
