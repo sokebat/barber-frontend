@@ -2,9 +2,9 @@
 
 import type React from "react"
 
+import { BarChart, Calendar, MessageSquare, Scissors, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart, Calendar, MessageSquare, Settings, Users, Scissors } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: BarChart },
