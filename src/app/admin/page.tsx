@@ -1,20 +1,21 @@
 "use client"
 
-import { Bar, Line } from "react-chartjs-2"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   LineElement,
   PointElement,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
+import { useRouter } from "next/navigation"
+import { useLayoutEffect } from "react"
+import { Bar, Line } from "react-chartjs-2"
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend)
 
 const revenueData = {
@@ -41,6 +42,16 @@ const appointmentsData = {
 }
 
 export default function AdminDashboard() {
+
+  const router = useRouter()
+  const isimplemented = true
+  useLayoutEffect(() => {
+    router.push("/admin/staff")
+  }
+  , [])
+
+if(!isimplemented)
+  return null
   return (
     <div className="container py-10">
       <h1 className="mb-6 text-3xl font-bold">Admin Dashboard</h1>

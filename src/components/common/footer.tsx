@@ -62,7 +62,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t py-2 text-center text-sm text-muted-foreground">
-          <p className="">© 2024 LuxeCuts & Spa. All rights reserved.</p>
+          <p className="">© 2024 BookMyCut. All rights reserved.</p>
         </div>
       </div>
     </footer>

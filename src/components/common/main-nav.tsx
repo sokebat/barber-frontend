@@ -30,7 +30,7 @@ export function MainNav() {
           <SheetContent side="left" className="pl-1 pr-0">
             <div className="px-7">
               <Link href="/" className="flex items-center"  >
-                <span className="font-bold">LuxeCuts & Spa</span>
+                <span className="font-bold">BookMyCut</span>
               </Link>
             </div>
             <nav className="mt-4 flex flex-col gap-4">
@@ -48,7 +48,7 @@ export function MainNav() {
         </Sheet>
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <span className="hidden font-bold lg:inline-block">
-            LuxeCuts & Spa
+            BookMyCut
           </span>
         </Link>
         <nav className="hidden gap-6 lg:flex">

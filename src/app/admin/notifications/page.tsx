@@ -35,14 +35,14 @@ const templates = [
     name: "Appointment Reminder",
     subject: "Reminder: Your appointment tomorrow",
     content:
-      "Dear {customer_name},\n\nThis is a reminder that you have an appointment scheduled for {appointment_time} tomorrow with {staff_name}.\n\nBest regards,\nLuxeCuts & Spa",
+      "Dear {customer_name},\n\nThis is a reminder that you have an appointment scheduled for {appointment_time} tomorrow with {staff_name}.\n\nBest regards,\nBookMyCut",
   },
   {
     id: "2",
     name: "Special Offer",
     subject: "Special Offer Just for You",
     content:
-      "Dear {customer_name},\n\nWe're excited to offer you a special discount on our services.\n\nUse code {promo_code} to get {discount}% off your next visit.\n\nBest regards,\nLuxeCuts & Spa",
+      "Dear {customer_name},\n\nWe're excited to offer you a special discount on our services.\n\nUse code {promo_code} to get {discount}% off your next visit.\n\nBest regards,\nBookMyCut",
   },
 ]
 

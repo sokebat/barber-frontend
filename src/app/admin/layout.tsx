@@ -2,17 +2,18 @@
 
 import type React from "react"
 
-import { BarChart, Calendar, MessageSquare, Scissors, Users } from "lucide-react"
+import { Calendar, MessageSquare, Scissors, Users } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const navigation = [
-  { name: "Dashboard", href: "/admin", icon: BarChart },
+  // { name: "Dashboard", href: "/admin", icon: BarChart },
   { name: "Staff", href: "/admin/staff", icon: Users },
   { name: "Schedule", href: "/admin/schedule", icon: Calendar },
   { name: "Services", href: "/admin/services", icon: Scissors },
   { name: "Notifications", href: "/admin/notifications", icon: MessageSquare },
-  // { name: "Settings", href: "/admin/settings", icon: Settings },
+  {name:"Products", href:"/admin/products", icon:Scissors}, 
+   
 ]
 
 export default function AdminLayout({

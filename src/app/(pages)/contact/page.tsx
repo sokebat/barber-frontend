@@ -1,23 +1,11 @@
 "use client";
-import { MapPin, Phone, Mail, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 
 const contactInfo = [
   {
@@ -76,78 +64,19 @@ export default function ContactPage() {
               </Card>
             ))}
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Location</CardTitle>
-              <CardDescription>Find us at our premium location</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-[16/9] relative bg-muted rounded-lg">
-                {/* Replace with actual map implementation */}
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                  Map placeholder
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Send us a Message</CardTitle>
-            <CardDescription>
-              Fill out the form below and we&apos;ll get back to you
-            </CardDescription>
+            <CardTitle> Our Location</CardTitle>
+           
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" />
-                </div>
+            <div className="  relative bg-muted rounded-lg">
+              {/* Replace with actual map implementation */}
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                Map placeholder
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Select>
-                  <SelectTrigger id="subject">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General Inquiry</SelectItem>
-                    <SelectItem value="appointment">
-                      Appointment Question
-                    </SelectItem>
-                    <SelectItem value="service">Service Information</SelectItem>
-                    <SelectItem value="feedback">Feedback</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Your message here..."
-                  className="min-h-[150px]"
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                Send Message
-              </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
       </div>

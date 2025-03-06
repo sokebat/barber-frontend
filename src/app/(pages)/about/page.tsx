@@ -63,7 +63,7 @@ export default function AboutPage() {
           <div className="container">
             <div className="grid max-w-lg gap-4">
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-                About LuxeCuts & Spa
+                About BookMyCut
               </h1>
               <p className="text-lg text-muted-foreground">
                 Premium grooming and wellness services for those who appreciate
@@ -104,7 +104,7 @@ export default function AboutPage() {
           <div className="flex flex-col justify-center space-y-6">
             <h2 className="text-3xl font-bold tracking-tight">Our Story</h2>
             <p className="text-muted-foreground">
-              Founded in 2010, LuxeCuts & Spa has been providing premium
+              Founded in 2010, BookMyCut has been providing premium
               grooming and wellness services to our valued clients. What started
               as a small barbershop has grown into a full-service establishment,
               offering a wide range of services from classic haircuts to
