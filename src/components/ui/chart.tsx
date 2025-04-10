@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -69,7 +67,7 @@ ChartContainer.displayName = "Chart"
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
-    ([, config]) => config.theme || config.color
+    ([_, config]) => config.theme || config.color
   )
 
   if (!colorConfig.length) {
@@ -356,8 +354,10 @@ function getPayloadConfigFromPayload(
 }
 
 export {
-  ChartContainer, ChartLegend,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
   ChartLegendContent,
-  ChartStyle, ChartTooltip,
-  ChartTooltipContent
+  ChartStyle,
 }
