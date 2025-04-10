@@ -1,4 +1,3 @@
-
 // Authentication
 export interface User {
   id?: number;
@@ -64,6 +63,13 @@ export interface Product {
   imageUrl: string;
   categoryName: string;
   categoryId?: number;
+  rating?: number;
+  reviewCount?: number;
+  sku?: string;
+  weight?: string;
+  details?: string;
+  ingredients?: string;
+  directions?: string;
 }
 
 // Team Member
