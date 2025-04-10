@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardDescription,
@@ -7,7 +7,7 @@ import {
   CardContent,
 } from "../ui/card";
 import { Button } from "../ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,12 +16,151 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { useServices } from "@/contexts/ServiceContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import ServiceService from "@/services/service.service";
+import { CreateServiceDto, UpdateServiceDto, UIService } from "@/types/ServiceService.types";
 
-interface ServiceTabProps {
-  services: any;
-}
+const ServiceTab = () => {
+    const { services, fetchServices } = useServices();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<UIService | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    subtitle: "",
+    price: 0,
+    type: "",
+    image: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-const ServiceTab = ({ services }: ServiceTabProps) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "price" ? parseFloat(value) || 0 : value,
+    }));
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const createDto: CreateServiceDto = {
+      id: Math.random(),
+      title: formData.title,
+      subtitle: formData.subtitle,
+      price: formData.price,
+      type: formData.type,
+      image: formData.image,
+      data: [],
+    };
+
+    try {
+      const response = await ServiceService.createService(createDto);
+      if (response.success) {
+        await fetchServices(); // Refresh the services list
+        setIsModalOpen(false);
+        resetForm();
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError("Failed to create service");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingService) return;
+
+    setLoading(true);
+    setError(null);
+
+    const updateDto: UpdateServiceDto = {
+      id: +editingService.id,
+      title: formData.title,
+      subtitle: formData.subtitle,  
+      price: formData.price,
+      type: formData.type,
+      image: formData.image,
+    };
+
+    try {
+      const response = await ServiceService.updateService(
+        editingService.id.split("-")[1], // Assuming the actual service ID is after the hyphen
+        updateDto
+      );
+      if (response.success) {
+        await fetchServices();
+        setIsModalOpen(false);
+        resetForm();
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError("Failed to update service");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this service?")) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await ServiceService.deleteService(id.split("-")[1]);
+      if (response.success) {
+        await fetchServices();
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError("Failed to delete service");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      subtitle: "",
+      price: 0,
+      type: "",
+      image: "",
+    });
+    setEditingService(null);
+  };
+
+  const openEditModal = (service: UIService) => {
+    setEditingService(service);
+    setFormData({
+      title: service.name,
+      subtitle: service.subtitle,
+      price: service.price,
+      type: service.type,
+      image: service.serviceImageUrl,
+    });
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -31,12 +170,86 @@ const ServiceTab = ({ services }: ServiceTabProps) => {
               <CardTitle>Services Management</CardTitle>
               <CardDescription>View and manage salon services</CardDescription>
             </div>
-            <div className="flex gap-2 mt-4 md:mt-0">
-              <Button>
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add New Service
-              </Button>
-            </div>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => resetForm()}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add New Service
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingService ? "Edit Service" : "Add New Service"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Fill in the details to {editingService ? "update" : "create"}{" "}
+                    a service.
+                  </DialogDescription>
+                </DialogHeader>
+                <form
+                  onSubmit={editingService ? handleUpdate : handleCreate}
+                  className="space-y-4"
+                >
+                  <div>
+                    <Label htmlFor="title">Name</Label>
+                    <Input
+                      id="title"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="subtitle">Subtitle</Label>
+                    <Input
+                      id="subtitle"
+                      name="subtitle"
+                      value={formData.subtitle}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="price">Price</Label>
+                    <Input
+                      id="price"
+                      name="price"
+                      type="number"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="type">Type</Label>
+                    <Input
+                      id="type"
+                      name="type"
+                      value={formData.type}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image">Image URL</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      value={formData.image}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                  {error && <p className="text-red-500">{error}</p>}
+                  <Button type="submit" disabled={loading}>
+                    {loading
+                      ? "Processing..."
+                      : editingService
+                      ? "Update Service"
+                      : "Create Service"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
@@ -66,14 +279,21 @@ const ServiceTab = ({ services }: ServiceTabProps) => {
                   <TableCell>${service.price?.toFixed(2)}</TableCell>
                   <TableCell>{service.duration}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditModal(service)}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       className="text-red-500"
+                      onClick={() => handleDelete(service.id)}
                     >
+                      <Trash2 className="h-4 w-4 mr-1" />
                       Delete
                     </Button>
                   </TableCell>

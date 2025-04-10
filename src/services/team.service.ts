@@ -20,7 +20,7 @@ class TeamService {
 
   async getTeamById(id: string): Promise<ApiResponse<Team>> {
     try {
-      const res = await axiosPrivate.get(`/api/Team/${id}`);
+      const res = await axiosPublic.get(`/Team/${id}`);
       return {
         success: true,
         data: res.data,
@@ -34,7 +34,8 @@ class TeamService {
 
   async createTeam(data: CreateTeamDto): Promise<ApiResponse<Team>> {
     try {
-      const res = await axiosPrivate.post("/api/Team", data);
+      const res = await axiosPublic.post("/Team", data);
+      console.log(res.data, "createTeam");
       return {
         success: true,
         data: res.data,
@@ -51,7 +52,7 @@ class TeamService {
     data: UpdateTeamDto
   ): Promise<ApiResponse<Team>> {
     try {
-      const res = await axiosPrivate.put(`/api/Team/${id}`, data);
+        const res = await axiosPublic.put(`/Team/${id}`, data);
       return {
         success: true,
         data: res.data,
@@ -65,7 +66,7 @@ class TeamService {
 
   async deleteTeam(id: string): Promise<ApiResponse<null>> {
     try {
-      const res = await axiosPrivate.delete(`/api/Team/${id}`);
+      const res = await axiosPublic.delete(`/Team/${id}`);
       return {
         success: true,
         data: null,

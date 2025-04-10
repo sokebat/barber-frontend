@@ -97,6 +97,7 @@ export const ServiceProvider: React.FC<ServicesProviderProps> = ({ children }) =
     setSearchTerm,
     filteredServices,
     resetFilters,
+    fetchServices,
   };
 
   return <ServiceContext.Provider value={value}>{children}</ServiceContext.Provider>;

@@ -13,16 +13,18 @@ export interface CreateAppointmentDto {
   serviceName: string;
   specialistName: string;
   customerName: string;
-  appointment: Date; // full ISO datetime (optional in backend maybe?)
-  appointmentDate: Date;
+  appointment: string; // full ISO datetime (optional in backend maybe?)
+  appointmentDate: string;
   appointmentTime: string;
   isApproved: boolean;
 }
 
 export interface UpdateAppointmentDto {
+  id: number;
   serviceName?: string;
   specialistName?: string;
   customerName?: string;
+  appointment?: string; // full ISO datetime (optional in backend maybe?)
   appointmentDate?: string;
   appointmentTime?: string;
   isApproved?: boolean;
@@ -48,6 +50,8 @@ export interface ServiceCategory {
 export interface UIService {
   id: string;
   name: string;
+  subtitle: string;
+  type: string;
   description: string;
   serviceImageUrl: string;
   price: number;
@@ -67,4 +71,5 @@ export interface ServicesContextProps {
   setSearchTerm: (term: string) => void;
   filteredServices: UIService[];
   resetFilters: () => void;
+  fetchServices: () => Promise<void>;
 }

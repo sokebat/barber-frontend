@@ -5,7 +5,7 @@ export interface ServiceItem {
   title: string;
   subtitle: string;
   price: number;
-  type: 'male' | 'female';
+  type: "male" | "female";
 }
 
 export interface ServiceCategory {
@@ -23,7 +23,7 @@ export interface UIService {
   description: string; // Combines item subtitle and category description
   serviceImageUrl: string; // Item image, fallback to category image
   price: number;
-  type: 'male' | 'female';
+  type:  string
   duration: string; // Not in JSON, adding for completeness
   categoryId: number;
   categoryName: string;
@@ -40,4 +40,31 @@ export interface ServicesContextProps {
   setSearchTerm: (term: string) => void;
   filteredServices: UIService[];
   resetFilters: () => void;
+}
+
+export interface Services {
+  id: number;
+  name: string;
+  description: string;
+  serviceImageUrl: string;
+  data: ServiceItem[];
+}
+
+export interface CreateServiceDto {
+  id: number;
+  title: string;
+  subtitle: string;
+  price: number;
+  type: string;
+  image: string;
+  data: ServiceItem[];
+}
+export interface UpdateServiceDto {
+  id: number;
+  title?: string;
+  subtitle?: string;
+  price?: number;
+  type?: string;
+  image?: string;
+  data?: ServiceItem[];
 }

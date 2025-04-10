@@ -11,6 +11,7 @@ export interface Team {
   }
   
   export interface CreateTeamDto {
+    id: number;
     name: string;
     description: string;
     profileImageUrl: string;
@@ -18,6 +19,7 @@ export interface Team {
   }
   
   export interface UpdateTeamDto {
+    id?: number;
     name?: string;
     description?: string;
     profileImageUrl?: string;

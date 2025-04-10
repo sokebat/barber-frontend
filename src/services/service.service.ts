@@ -1,6 +1,7 @@
 import { axiosPrivate, axiosPublic } from "@/axios/axios";
+import { Service } from "@/types";
 import {
-  Service,
+  Services,
   CreateServiceDto,
   UpdateServiceDto,
 } from "@/types/ServiceService.types";

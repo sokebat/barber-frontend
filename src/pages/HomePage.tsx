@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
         ctaLink="/book"
         secondaryCtaText="Explore Services"
         secondaryCtaLink="/services"
-        backgroundImage="https://images.unsplash.com/photo-1595425970364-5088138eb119?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+        backgroundImage="https://images.unsplash.com/photo-1610368171057-56a6327c1aff?q=80&w=2030&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
       />
 
       {/* Features Section */}

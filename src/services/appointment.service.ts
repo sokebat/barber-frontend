@@ -16,7 +16,9 @@ interface ApiResponse<T> {
 class AppointmentService {
   async getAllAppointments(): Promise<ApiResponse<Appointment[]>> {
     try {
-      const res = await axiosPrivate.get(" /Appointment");
+      console.log("getAllAppointments");
+      const res = await axiosPublic.get("/Appointment");
+      console.log(res.data, "getAllAppointments");
       return {
         success: true,
         data: res.data,
@@ -24,6 +26,7 @@ class AppointmentService {
         status: res.status,
       };
     } catch (error: any) {
+      console.log(error, "getAllAppointments");
       return this.handleError(error);
     }
   }
@@ -31,6 +34,7 @@ class AppointmentService {
   async getAppointmentById(id: string): Promise<ApiResponse<Appointment>> {
     try {
       const res = await axiosPublic.get(`/Appointment/${id}`);
+      console.log(res.data, "getAppointmentById");
       return {
         success: true,
         data: res.data,
@@ -61,7 +65,8 @@ class AppointmentService {
     data: UpdateAppointmentDto
   ): Promise<ApiResponse<Appointment>> {
     try {
-      const res = await axiosPrivate.put(`/Appointment/${id}`, data);
+      const res = await axiosPublic.put(`/Appointment/${id}`, data);
+      console.log(res.data, "updateAppointment"); 
       return {
         success: true,
         data: res.data,
@@ -73,9 +78,9 @@ class AppointmentService {
     }
   }
 
-  async deleteAppointment   (id: string): Promise<ApiResponse<null>> {
+  async deleteAppointment(id: string): Promise<ApiResponse<null>> {
     try {
-      const res = await axiosPrivate.delete(`/Appointment/${id}`);
+      const res = await axiosPublic.delete(`/Appointment/${id}`);
       return {
         success: true,
         data: null,

@@ -38,7 +38,7 @@ const Hero: React.FC<HeroProps> = ({
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
           <Button
             asChild
-            className="bg-brand-gold text-brand-blue hover:bg-brand-gold/90 text-lg px-8 py-6"
+            className="bg-brand-gold text-brand-white hover:bg-brand-gold/90 text-lg px-8 py-6"
             size="lg"
           >
             <Link to={ctaLink}>{ctaText}</Link>
@@ -48,7 +48,7 @@ const Hero: React.FC<HeroProps> = ({
             <Button
               asChild
               variant="outline"
-              className="border-white text-white hover:bg-white/20 text-lg px-8 py-6"
+              className="border-white text-brand-blue hover:bg-white/20 text-lg px-8 py-6"
               size="lg"
             >
               <Link to={secondaryCtaLink}>{secondaryCtaText}</Link>

@@ -16,25 +16,30 @@ import { useTeam } from "@/contexts/TeamContext";
 import { useToast } from "@/hooks/use-toast";
 import { UIService } from "@/types/AppointmentService.types";
 import AppointmentService from "@/services/appointment.service";
-
 import { Team } from "@/types/team.type";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { ArrowRight } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
 
 const BookingPage: React.FC = () => {
+  // Step management: 1: Service; 2: Specialist; 3: Date; 4: Time; 5: Confirm
   const [step, setStep] = useState(1);
   const [services, setServices] = useState<UIService[]>([]);
+  // Name state for customer's name
+  const [name, setName] = useState<string>("");
   const { teams } = useTeam();
 
   const [selectedService, setSelectedService] = useState<UIService | null>(
     null
   );
-  const [selectedSpecialist, setSelectedSpecialist] = useState<string>(null);
+  const [selectedSpecialist, setSelectedSpecialist] = useState<string | null>(
+    null
+  );
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { authState } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -42,7 +47,7 @@ const BookingPage: React.FC = () => {
 
   const { services: filteredServices } = useServices();
 
-  // Available time slots
+  // Available time slots in 12-hour format
   const timeSlots = [
     "9:00 AM",
     "10:00 AM",
@@ -54,6 +59,13 @@ const BookingPage: React.FC = () => {
     "4:00 PM",
     "5:00 PM",
   ];
+
+  // If the user is authenticated, pre-fill the name if available
+  useEffect(() => {
+    if (authState.user?.fullName) {
+      setName(authState.user.fullName);
+    }
+  }, [authState.user]);
 
   // Get query parameters (for direct booking from other pages)
   useEffect(() => {
@@ -80,7 +92,7 @@ const BookingPage: React.FC = () => {
           const specialist = teams.find((s) => s.id === parseInt(specialistId));
           if (specialist) {
             setSelectedSpecialist(specialist.name);
-            setStep(specialistId && serviceId ? 3 : 1);
+            setStep(serviceId ? 3 : 1);
           }
         }
       } catch (error) {
@@ -96,7 +108,7 @@ const BookingPage: React.FC = () => {
     };
 
     fetchData();
-  }, [location.search, toast]);
+  }, [location.search, filteredServices, teams, toast]);
 
   const handleServiceSelect = (service: UIService) => {
     setSelectedService(service);
@@ -118,6 +130,26 @@ const BookingPage: React.FC = () => {
     setStep(5);
   };
 
+  // Helper: Convert 12-hour time (e.g., "1:00 PM") to 24-hour format string "HH:mm:ss"
+  const convertTo24HourFormat = (time12h: string) => {
+    const parsedTime = parse(time12h, "h:mm a", new Date());
+    return format(parsedTime, "HH:mm:ss");
+  };
+
+  // Helper: Combine selectedDate and 24-hour formatted time to form an ISO datetime string
+  const combineDateAndTime = (date: Date, time24: string) => {
+    const [hours, minutes, seconds] = time24.split(":").map(Number);
+    const combined = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes,
+      seconds
+    );
+    return combined.toISOString();
+  };
+
   const handleBooking = async () => {
     if (!authState.isAuthenticated) {
       toast({
@@ -133,11 +165,13 @@ const BookingPage: React.FC = () => {
       !selectedService ||
       !selectedSpecialist ||
       !selectedDate ||
-      !selectedTime
+      !selectedTime ||
+      !name
     ) {
       toast({
         title: "Incomplete Booking",
-        description: "Please complete all booking steps.",
+        description:
+          "Please complete all booking steps, including entering your name.",
         variant: "destructive",
       });
       return;
@@ -145,28 +179,39 @@ const BookingPage: React.FC = () => {
 
     try {
       setLoading(true);
+      // Convert the selected time to 24-hour format
+      const time24 = convertTo24HourFormat(selectedTime);
+      // Combine the selected date and time into an ISO datetime string
+      const appointmentCombined = combineDateAndTime(selectedDate, time24);
+      // Format the appointment date as yyyy-MM-dd
+      const formattedAppointmentDate = format(selectedDate, "yyyy-MM-dd");
 
-        const res = await AppointmentService.createAppointment({
-          id: Math.random(),
-          serviceName: selectedService.name,
-          specialistName: selectedSpecialist,
-          customerName: authState.user?.fullName || '',
-          appointment: selectedDate,
-          appointmentDate: selectedDate,
-          appointmentTime: selectedTime,
-          isApproved: false
-        })
-        
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast({
-        title: "Booking Successful",
-        description:
-          "Your appointment has been scheduled. You will receive a confirmation email shortly.",
+      const response = await AppointmentService.createAppointment({
+        id: Math.floor(Math.random() * 100000),
+        serviceName: selectedService.name,
+        specialistName: selectedSpecialist,
+        customerName: name,
+        appointment: appointmentCombined,
+        appointmentDate: formattedAppointmentDate,
+        appointmentTime: time24,
+        isApproved: false,
       });
 
-      navigate("/book");
-      setStep(1);
+      if (response.success) {
+        toast({
+          title: "Booking Successful",
+          description:
+            "Your appointment has been scheduled. You will receive a confirmation email shortly.",
+        });
+        navigate("/book");
+        setStep(1);
+      } else {
+        toast({
+          title: "Booking Failed",
+          description: "Failed to schedule your appointment. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error booking appointment:", error);
       toast({
@@ -179,6 +224,7 @@ const BookingPage: React.FC = () => {
     }
   };
 
+  // Render step content based on current step
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -270,17 +316,27 @@ const BookingPage: React.FC = () => {
       case 3:
         return (
           <div className="animate-fade-in">
-            <SectionTitle title="Select a Date" align="left" />
-            <div className="flex justify-center mb-6">
+            <SectionTitle
+              title="Enter Your Name & Select a Date"
+              align="left"
+            />
+            <div className="flex flex-col  justify-center mb-6">
+              <div className="mt-6 mb-8 max-w-md">
+                <label className="block text-lg font-medium mb-2">
+                  Your Name
+                </label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+              </div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateSelect}
-                className="rounded-md border bg-card p-3 pointer-events-auto"
-                disabled={(date) => {
-                  // Disable past dates and Sundays
-                  return date < new Date() || date.getDay() === 0;
-                }}
+                className="rounded-md border bg-card p-3 w-72 pointer-events-auto"
+                disabled={(date) => date < new Date() || date.getDay() === 0}
               />
             </div>
             <div className="flex justify-center">
@@ -345,6 +401,10 @@ const BookingPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between border-b pb-2">
+                  <span className="font-medium">Name:</span>
+                  <span>{name}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Service:</span>
                   <span>{selectedService?.name}</span>
                 </div>
@@ -382,6 +442,9 @@ const BookingPage: React.FC = () => {
             </Card>
           </div>
         );
+
+      default:
+        return null;
     }
   };
 
@@ -393,6 +456,7 @@ const BookingPage: React.FC = () => {
           <p className="text-xl">
             Schedule your beauty or wellness service in a few simple steps.
           </p>
+          {/* Name Field */}
         </div>
       </div>
 

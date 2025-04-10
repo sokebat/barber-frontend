@@ -7,21 +7,24 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ServiceProvider } from "@/contexts/ServiceContext";
 import { TeamProvider } from "@/contexts/TeamContext";
+import { AppointmentProvider } from "./ApointmentContext";
 const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <CookiesProvider>
       <AuthProvider>
-        <ServiceProvider>
-          <TeamProvider>
-            <CartProvider>
+        <AppointmentProvider>
+          <ServiceProvider>
+            <TeamProvider>
+              <CartProvider>
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
                 {children}
               </TooltipProvider>
             </CartProvider>
-          </TeamProvider>
-        </ServiceProvider>
+            </TeamProvider>
+          </ServiceProvider>
+        </AppointmentProvider>
       </AuthProvider>
     </CookiesProvider>
   );
