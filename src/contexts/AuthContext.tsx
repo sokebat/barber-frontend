@@ -1,39 +1,66 @@
+// src/contexts/AuthContext.tsx
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, AuthState, LoginCredentials, RegisterCredentials } from '@/types';
-import { authAPI } from '@/services/api';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
+import AuthService from "@/services/auth.service";
+import { LoginCredentials, RegisterCredentials, User } from "@/types";
+import { jwtDecode } from "jwt-decode";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useCookies } from "react-cookie";
 
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+}
 interface AuthContextProps {
   authState: AuthState;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
     loading: true,
   });
   const { toast } = useToast();
+  const [cookies, setCookie, removeCookie] = useCookies(["session"]);
+  const authService = AuthService;
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
+    const initializeAuth = async () => {
+      const session = cookies.session;
+      if (session?.apiToken) {
         try {
-          const userData = await authAPI.getCurrentUser();
+          const decoded: any = jwtDecode(session.apiToken);
+          const user = {
+            id: decoded.sub,
+            email: decoded.email || "",
+            fullName: decoded.fullName || "",
+            role: decoded.role || "admin",
+            teamId: decoded.teamId || "",
+          };
+
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp < currentTime) {
+            throw new Error("Token expired");
+          }
+
           setAuthState({
-            user: userData,
+            user,
             isAuthenticated: true,
             loading: false,
           });
         } catch (error) {
-          localStorage.removeItem('token');
+          removeCookie("session", { path: "/" });
           setAuthState({
             user: null,
             isAuthenticated: false,
@@ -49,26 +76,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    checkAuth();
-  }, []);
+    initializeAuth();
+  }, [cookies, removeCookie]);
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      const { token, user } = await authAPI.login(credentials);
-      localStorage.setItem('token', token);
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        loading: false,
-      });
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.fullName}!`,
-      });
+      const response = await authService.login(credentials);
+      if (response.success) {
+        const { token } = response.data;
+        if (!token) {
+          throw new Error("No token received");
+        }
+
+        // Set cookie with token
+        setCookie(
+          "session",
+          { apiToken: token },
+          {
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60, // 24 hours
+          }
+        );
+
+        const decoded: any = jwtDecode(token);
+        const user = {
+          id: decoded.sub,
+          email: decoded.email,
+          fullName: decoded.fullName,
+          role: decoded.role,
+          teamId: decoded.teamId,
+        };
+
+        setAuthState({
+          user,
+          isAuthenticated: true,
+          loading: false,
+        });
+
+        toast({
+          title: "Success",
+          description: "Login successful!",
+        });
+      } else {
+        throw new Error(response.message || "Login failed");
+      }
     } catch (error) {
+      setAuthState((prev) => ({ ...prev, loading: false }));
       toast({
-        title: "Login failed",
-        description: "Invalid email or password",
+        title: "Error",
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
       throw error;
@@ -77,21 +135,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (credentials: RegisterCredentials) => {
     try {
-      const { token, user } = await authAPI.register(credentials);
-      localStorage.setItem('token', token);
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        loading: false,
-      });
-      toast({
-        title: "Registration successful",
-        description: `Welcome, ${user.fullName}!`,
-      });
+      const response = await authService.register(credentials);
+      if (response.success) {
+        const { token } = response.data;
+        if (!token) {
+          throw new Error("No token received");
+        }
+
+        setCookie(
+          "session",
+          { apiToken: token },
+          {
+            path: "/",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60, // 24 hours
+          }
+        );
+
+        const decoded: any = jwtDecode(token);
+        const user = {
+          id: decoded.sub,
+          email: decoded.email,
+          fullName: credentials.fullName,
+          role: decoded.role,
+          teamId: decoded.teamId,
+        };
+
+        setAuthState({
+          user,
+          isAuthenticated: true,
+          loading: false,
+        });
+
+        toast({
+          title: "Success",
+          description: "Registration successful!",
+        });
+      } else {
+        throw new Error(response.message || "Registration failed");
+      }
     } catch (error) {
+      setAuthState((prev) => ({ ...prev, loading: false }));
       toast({
-        title: "Registration failed",
-        description: "Could not create account. Please try again.",
+        title: "Error",
+        description: error.message || "Registration failed",
         variant: "destructive",
       });
       throw error;
@@ -99,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    removeCookie("session", { path: "/" });
     setAuthState({
       user: null,
       isAuthenticated: false,
@@ -107,21 +195,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     toast({
       title: "Logged out",
-      description: "You have been successfully logged out.",
+      description: "You've been successfully logged out",
     });
   };
 
-  return (
-    <AuthContext.Provider value={{ authState, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    authState,
+    login,
+    register,
+    logout,
+    isLoading: authState.loading,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

@@ -22,6 +22,8 @@ import {
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { authState, logout } = useAuth();
+
+  console.log(authState, "authState")
   const { cart } = useCart();
   const location = useLocation();
   
@@ -86,17 +88,17 @@ const Navbar: React.FC = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span className="hidden sm:inline">{authState.user?.fullName.split(' ')[0]}</span>
+                  {/* <span className="hidden sm:inline">{authState.user?.fullName.split(' ')[0]}</span> */}
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link to="/profile" className="w-full cursor-pointer">My Profile</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                </DropdownMenuItem> */}
+                {/* <DropdownMenuItem asChild>
                   <Link to="/appointments" className="w-full cursor-pointer">My Appointments</Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 {authState.user?.role === 'admin' && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="w-full cursor-pointer">Admin Dashboard</Link>

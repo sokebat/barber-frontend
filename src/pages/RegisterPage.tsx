@@ -1,4 +1,4 @@
-
+// src/pages/RegisterPage.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,10 +23,10 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { register } = useAuth();
   const navigate = useNavigate();
-  
+
   const validatePassword = () => {
     const hasMinLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
@@ -39,39 +39,39 @@ const RegisterPage: React.FC = () => {
       isValid: hasMinLength && hasUpperCase && hasNumber
     };
   };
-  
+
   const passwordValidation = validatePassword();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!fullName || !email || !password) {
       setError('Please fill in all fields');
       return;
     }
-    
+
     if (!passwordValidation.isValid) {
       setError('Please ensure your password meets all requirements');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    
+
     try {
       setError('');
       setLoading(true);
       await register({ email, fullName, password });
-      navigate('/');
+      navigate('/'); // Redirect to home page after successful registration
     } catch (err) {
       setError('Registration failed. This email may already be in use.');
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md">
@@ -80,7 +80,7 @@ const RegisterPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-brand-blue">Salon<span className="text-brand-gold">Suite</span></h1>
           </Link>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Create Account</CardTitle>
@@ -97,9 +97,10 @@ const RegisterPage: React.FC = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -109,9 +110,10 @@ const RegisterPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -122,11 +124,13 @@ const RegisterPage: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4 text-gray-400" />
@@ -135,7 +139,7 @@ const RegisterPage: React.FC = () => {
                     )}
                   </button>
                 </div>
-                
+
                 <div className="mt-2 space-y-1 text-sm">
                   <div className="flex items-center gap-2">
                     {passwordValidation.hasMinLength ? (
@@ -169,7 +173,7 @@ const RegisterPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input
@@ -179,12 +183,13 @@ const RegisterPage: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
+                  disabled={loading}
                 />
                 {confirmPassword && password !== confirmPassword && (
                   <p className="text-red-500 text-sm mt-1">Passwords do not match</p>
                 )}
               </div>
-              
+
               {error && (
                 <div className="text-red-500 text-sm">{error}</div>
               )}
@@ -193,7 +198,7 @@ const RegisterPage: React.FC = () => {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating account..." : "Create Account"}
               </Button>
-              
+
               <div className="text-center mt-4">
                 <p className="text-sm text-gray-600">
                   Already have an account?{" "}

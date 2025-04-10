@@ -6,11 +6,7 @@ export interface User {
   role?: 'customer' | 'staff' | 'admin';
 }
 
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-}
+
 
 export interface LoginCredentials {
   email: string;
