@@ -1,10 +1,6 @@
 import { axiosPrivate, axiosPublic } from "@/axios/axios";
 import { Service } from "@/types";
-import {
-  Services,
-  CreateServiceDto,
-  UpdateServiceDto,
-} from "@/types/ServiceService.types";
+import { ServiceCategory, UpdateServiceDto } from "@/types/ServiceService.types";
 
 interface ApiResponse<T> {
   success: boolean;
@@ -15,11 +11,12 @@ interface ApiResponse<T> {
 }
 
 class ServiceService {
+  // Get all services
   async getAllServices(): Promise<ApiResponse<Service[]>> {
     try {
       const res = await axiosPublic.get("/OurServices");
       console.log(res.data, "res.data");
-      console.log(res,"all services")
+      console.log(res, "all services");
       return {
         success: true,
         data: res.data,
@@ -31,6 +28,7 @@ class ServiceService {
     }
   }
 
+  // Get a single service by ID
   async getServiceById(id: string): Promise<ApiResponse<Service>> {
     try {
       const res = await axiosPublic.get(`/services/${id}`);
@@ -45,7 +43,8 @@ class ServiceService {
     }
   }
 
-  async createService(data: CreateServiceDto): Promise<ApiResponse<Service>> {
+  // Create a new service
+  async createService(data: ServiceCategory): Promise<ApiResponse<Service>> {
     try {
       const res = await axiosPublic.post("/services", data);
       return {
@@ -59,6 +58,7 @@ class ServiceService {
     }
   }
 
+  // Update an existing service
   async updateService(
     id: string,
     data: UpdateServiceDto
@@ -76,6 +76,7 @@ class ServiceService {
     }
   }
 
+  // Delete a service
   async deleteService(id: string): Promise<ApiResponse<null>> {
     try {
       const res = await axiosPrivate.delete(`/services/${id}`);
@@ -90,6 +91,7 @@ class ServiceService {
     }
   }
 
+  // Error handling utility
   private handleError(error: any): ApiResponse<any> {
     return {
       success: false,
