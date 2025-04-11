@@ -36,6 +36,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     try {
       const response = await AppointmentService.getAllAppointments();
       if (response.success && response.data) {
+        console.log(response.data,"full appoinments")
         setAppointments(response.data);
       } else {
         setError(response.message);

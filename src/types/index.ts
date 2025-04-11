@@ -1,3 +1,5 @@
+import { Product } from "./ProductService.types";
+
 // Authentication
 export interface User {
   id?: number;
@@ -31,10 +33,7 @@ export interface Appointment {
 }
 
 // Service Category
-export interface Category {
-  id: number;
-  name: string;
-}
+ 
 
 // Service
 export interface Service {
@@ -49,24 +48,7 @@ export interface Service {
   data?: any[];
 }
 
-// Product
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  discountPrice?: number;
-  imageUrl: string;
-  categoryName: string;
-  categoryId?: number;
-  rating?: number;
-  reviewCount?: number;
-  sku?: string;
-  weight?: string;
-  details?: string;
-  ingredients?: string;
-  directions?: string;
-}
+  
 
 // Team Member
 export interface TeamMember {

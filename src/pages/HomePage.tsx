@@ -16,17 +16,7 @@ import { Link } from "react-router-dom";
 const HomePage: React.FC = () => {
   const { teams } = useTeam();
 
-  const {
-    serviceCategories,
-    selectedCategory,
-    searchTerm,
-    loading,
-    error,
-    setSelectedCategory,
-    setSearchTerm,
-    filteredServices,
-    resetFilters,
-  } = useServices();
+  const { services } = useServices();
 
   console.log(teams, "teams");
 
@@ -143,7 +133,7 @@ const HomePage: React.FC = () => {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredServices.slice(0, 6).map((service) => (
+            {services.slice(0, 6).map((service) => (
               <ServiceCard key={service.id} service={service} />
             ))}
           </div>

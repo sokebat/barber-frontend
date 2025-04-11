@@ -1,4 +1,5 @@
 import AppointmentTab from "@/components/admin/AppointmentTab";
+import CategoriesTab from "@/components/admin/CategoriesTab";
 import DashboardTab from "@/components/admin/DashboardTab";
 import ProductsTab from "@/components/admin/ProductsTab";
 import ReportsTab from "@/components/admin/ReportsTab";
@@ -6,82 +7,33 @@ import ServiceTab from "@/components/admin/ServiceTab";
 import Sidebar from "@/components/admin/Sidebar";
 import TeamTab from "@/components/admin/TeamTab";
 import { Button } from "@/components/ui/button";
+import { useAppointment } from "@/contexts/ApointmentContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useServices } from "@/contexts/ServiceContext";
+import { useStore } from "@/contexts/storeContext";
+import { useTeam } from "@/contexts/TeamContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
-import { Appointment, Product, Service, TeamMember } from "@/types";
 import { Menu } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTeam } from "@/contexts/TeamContext";
-import { useAppointment } from "@/contexts/ApointmentContext";
 const AdminDashboard: React.FC = () => {
   const { authState, logout } = useAuth();
   const navigate = useNavigate();
+
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("appointments");
-
-  // Mock data
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-
-  const [products, setProducts] = useState<Product[]>([]);
-
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   const { teams } = useTeam();
   const { appointments: allAppointments, getAllAppointments } =
     useAppointment();
   const { services } = useServices();
-  useEffect(() => {
-    // Check if user is admin, otherwise redirect
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const productsData: Product[] = [
-          {
-            id: 1,
-            name: "Hydrating Shampoo",
-            description: "Premium hydrating shampoo for all hair types.",
-            price: 24.99,
-            discountPrice: 19.99,
-            imageUrl:
-              "https://images.unsplash.com/photo-1626766632648-f5e0c0a1506a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
-            categoryName: "Hair Care",
-          },
-          {
-            id: 2,
-            name: "Beard Oil",
-            description: "Nourishing beard oil for a healthy, shiny beard.",
-            price: 29.99,
-            imageUrl:
-              "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
-            categoryName: "Beard Care",
-          },
-        ];
-
-        setAppointments(allAppointments);
-
-        setProducts(productsData);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load dashboard data.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [authState, navigate, toast]);
+  const { products, fetchProducts } = useStore();
 
   useEffect(() => {
     getAllAppointments();
+    fetchProducts();
   }, []);
 
   // useEffect(() => {
@@ -110,8 +62,8 @@ const AdminDashboard: React.FC = () => {
 
   const getOverviewStats = () => {
     return {
-      totalAppointments: appointments.length,
-      pendingAppointments: appointments.filter((a) => !a.isApproved).length,
+      totalAppointments: allAppointments.length,
+      pendingAppointments: allAppointments.filter((a) => !a.isApproved).length,
       totalServices: services.length,
       totalProducts: products.length,
       totalTeamMembers: teams.length,
@@ -157,6 +109,7 @@ const AdminDashboard: React.FC = () => {
                 {activeTab === "appointments" && "Appointment Management"}
                 {activeTab === "services" && "Services Management"}
                 {activeTab === "products" && "Product Management"}
+                {activeTab === "categories" && "Categories Management"}
                 {activeTab === "team" && "Team Management"}
                 {activeTab === "reports" && "Reports & Analytics"}
               </h1>
@@ -183,38 +136,35 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500">Loading dashboard data...</p>
-            </div>
-          ) : (
-            <>
-              {/* Dashboard Overview */}
-              {activeTab === "dashboard" && (
-                <DashboardTab
-                  stats={stats}
-                  appointments={appointments}
-                  setActiveTab={setActiveTab}
-                  formatDate={formatDate}
-                />
-              )}
+          <>
+            {/* Dashboard Overview */}
+            {activeTab === "dashboard" && (
+              <DashboardTab
+                stats={stats}
+                appointments={allAppointments}
+                setActiveTab={setActiveTab}
+                formatDate={formatDate}
+              />
+            )}
 
-              {/* Appointments Tab */}
-              {activeTab === "appointments" && <AppointmentTab />}
+            {/* Appointments Tab */}
+            {activeTab === "appointments" && <AppointmentTab />}
 
-              {/* Services Tab */}
-              {activeTab === "services" && <ServiceTab />}
+            {/* Services Tab */}
+            {activeTab === "services" && <ServiceTab />}
 
-              {/* Products Tab */}
-              {activeTab === "products" && <ProductsTab products={products} />}
+            {/* Products Tab */}
+            {activeTab === "products" && <ProductsTab />}
 
-              {/* Team Tab */}
-              {activeTab === "team" && <TeamTab />}
+            {/* Categories Tab */}
+            {activeTab === "categories" && <CategoriesTab />}
 
-              {/* Reports Tab */}
-              {activeTab === "reports" && <ReportsTab />}
-            </>
-          )}
+            {/* Team Tab */}
+            {activeTab === "team" && <TeamTab />}
+
+            {/* Reports Tab */}
+            {activeTab === "reports" && <ReportsTab />}
+          </>
         </div>
       </main>
     </div>

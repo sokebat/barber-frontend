@@ -20,11 +20,11 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
   
   return (
     <div className={`mb-12 ${alignmentClasses[align]}`}>
-      <h2 className="text-3xl font-bold mb-3 text-gray-800 relative inline-block pb-2">
+      <h2 className="text-3xl font-bold mb-3   relative inline-block pb-2">
         {title}
         <span className="absolute bottom-0 left-0 w-full md:w-2/3 h-1 bg-brand-gold"></span>
       </h2>
-      {subtitle && <p className="text-gray-600 max-w-3xl mx-auto">{subtitle}</p>}
+      {subtitle && <p className="  max-w-3xl mx-auto">{subtitle}</p>}
     </div>
   );
 };

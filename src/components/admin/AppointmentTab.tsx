@@ -48,6 +48,7 @@ const AppointmentTab = () => {
   // Fetch appointments on mount
   useEffect(() => {
     getAllAppointments();
+    
   }, []);
 
   // Approve (update) an appointment

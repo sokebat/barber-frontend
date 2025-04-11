@@ -24,7 +24,7 @@ const ServicesPage: React.FC = () => {
     <Layout>
       <div className="bg-brand-blue text-white py-20">
         <div className="container-custom">
-          <h1 className="text-4xl font-bold mb-4">Our Services</h1>
+          <h1 className="text-4xl font-bold text-red-500 mb-4" >Our Services</h1>
           <p className="text-xl max-w-3xl">
             Discover our comprehensive range of beauty and wellness services
             designed to enhance your natural beauty and promote relaxation.
