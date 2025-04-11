@@ -1,4 +1,3 @@
-// src/pages/RegisterPage.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +19,7 @@ const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -31,12 +31,14 @@ const RegisterPage: React.FC = () => {
     const hasMinLength = password.length >= 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasNumber = /[0-9]/.test(password);
-    
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
     return {
       hasMinLength,
       hasUpperCase,
       hasNumber,
-      isValid: hasMinLength && hasUpperCase && hasNumber
+      hasSpecialChar,
+      isValid: hasMinLength && hasUpperCase && hasNumber && hasSpecialChar,
     };
   };
 
@@ -45,7 +47,7 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !phoneNumber) {
       setError('Please fill in all fields');
       return;
     }
@@ -63,10 +65,10 @@ const RegisterPage: React.FC = () => {
     try {
       setError('');
       setLoading(true);
-      await register({ email, fullName, password });
-      navigate('/'); // Redirect to home page after successful registration
-    } catch (err) {
-      setError('Registration failed. This email may already be in use.');
+      await register({ email, fullName, password, phoneNumber, role: 'Customer' });
+      navigate('/login');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. This email may already be in use.');
     } finally {
       setLoading(false);
     }
@@ -109,6 +111,19 @@ const RegisterPage: React.FC = () => {
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  placeholder="1234567890"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
                   disabled={loading}
                 />
@@ -169,6 +184,16 @@ const RegisterPage: React.FC = () => {
                     )}
                     <span className={passwordValidation.hasNumber ? "text-green-500" : "text-gray-500"}>
                       At least one number
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {passwordValidation.hasSpecialChar ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-gray-300" />
+                    )}
+                    <span className={passwordValidation.hasSpecialChar ? "text-green-500" : "text-gray-500"}>
+                      At least one special character
                     </span>
                   </div>
                 </div>

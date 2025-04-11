@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,12 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Cookies from 'js-cookie';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { authState, logout } = useAuth();
-
-  console.log(authState, "authState")
+  const { user, isAuthenticated, logout } = useAuth();
   const { cart } = useCart();
   const location = useLocation();
   
@@ -32,6 +30,14 @@ const Navbar: React.FC = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const apiToken = Cookies.get("auth_token");
+  const userRole = Cookies.get("user_role");
+
+  console.log(apiToken,"apiToken");
+  console.log(userRole,"userRole");
+
+  console.log(user,"user");
   
   const closeMenu = () => {
     setIsMenuOpen(false);
@@ -45,6 +51,11 @@ const Navbar: React.FC = () => {
     { name: 'About Us', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
+
+  const handleLogout = () => {
+    closeMenu(); // Close the mobile menu first
+    logout(); // This will navigate to /login
+  };
 
   return (
     <nav className="bg-white shadow-md py-4 sticky top-0 z-50">
@@ -60,7 +71,11 @@ const Navbar: React.FC = () => {
             <Link
               key={link.path}
               to={link.path}
-              className={`${isActive(link.path) ? 'active-nav-link' : 'nav-link'}`}
+              className={`${
+                isActive(link.path)
+                  ? 'text-brand-blue font-semibold border-b-2 border-brand-blue'
+                  : 'text-gray-700 hover:text-brand-blue'
+              } transition-colors duration-200`}
               onClick={closeMenu}
             >
               {link.name}
@@ -72,7 +87,12 @@ const Navbar: React.FC = () => {
         <div className="hidden md:flex items-center space-x-4">
           {/* Cart Button with Counter */}
           <Link to="/cart" className="relative">
-            <Button variant="ghost" size="icon" className="text-gray-700 hover:text-brand-blue">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-700 hover:text-brand-blue"
+              aria-label={`Cart with ${cart.items.length} items`}
+            >
               <ShoppingCart className="h-5 w-5" />
               {cart.items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-brand-gold text-brand-blue rounded-full w-5 h-5 flex items-center justify-center text-xs font-semibold">
@@ -83,23 +103,17 @@ const Navbar: React.FC = () => {
           </Link>
           
           {/* Auth Buttons */}
-          {authState.isAuthenticated ? (
+          {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  {/* <span className="hidden sm:inline">{authState.user?.fullName.split(' ')[0]}</span> */}
+                  <span className="hidden sm:inline">{user?.fullName.split(' ')[0]}</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {/* <DropdownMenuItem asChild>
-                  <Link to="/profile" className="w-full cursor-pointer">My Profile</Link>
-                </DropdownMenuItem> */}
-                {/* <DropdownMenuItem asChild>
-                  <Link to="/appointments" className="w-full cursor-pointer">My Appointments</Link>
-                </DropdownMenuItem> */}
-                {authState.user?.role === 'admin' && (
+                {user?.role === 'Admin' && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="w-full cursor-pointer">Admin Dashboard</Link>
                   </DropdownMenuItem>
@@ -125,7 +139,12 @@ const Navbar: React.FC = () => {
         {/* Mobile Menu Button */}
         <div className="md:hidden flex items-center space-x-3">
           <Link to="/cart" className="relative">
-            <Button variant="ghost" size="icon" className="text-gray-700">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-gray-700"
+              aria-label={`Cart with ${cart.items.length} items`}
+            >
               <ShoppingCart className="h-5 w-5" />
               {cart.items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-brand-gold text-brand-blue rounded-full w-5 h-5 flex items-center justify-center text-xs font-semibold">
@@ -134,7 +153,12 @@ const Navbar: React.FC = () => {
               )}
             </Button>
           </Link>
-          <Button variant="ghost" onClick={toggleMenu} size="icon">
+          <Button
+            variant="ghost"
+            onClick={toggleMenu}
+            size="icon"
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+          >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         </div>
@@ -148,7 +172,11 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`${isActive(link.path) ? 'active-nav-link' : 'nav-link'} py-2 border-b border-gray-100`}
+                className={`${
+                  isActive(link.path)
+                    ? 'text-brand-blue font-semibold border-b-2 border-brand-blue'
+                    : 'text-gray-700 hover:text-brand-blue'
+                } py-2 border-b border-gray-100 transition-colors duration-200`}
                 onClick={closeMenu}
               >
                 {link.name}
@@ -156,20 +184,14 @@ const Navbar: React.FC = () => {
             ))}
             
             <div className="pt-4">
-              {authState.isAuthenticated ? (
+              {isAuthenticated ? (
                 <div className="space-y-3">
-                  <Link to="/profile" className="block py-2 nav-link" onClick={closeMenu}>
-                    My Profile
-                  </Link>
-                  <Link to="/appointments" className="block py-2 nav-link" onClick={closeMenu}>
-                    My Appointments
-                  </Link>
-                  {authState.user?.role === 'admin' && (
-                    <Link to="/admin" className="block py-2 nav-link" onClick={closeMenu}>
+                  {user?.role === 'Admin' && (
+                    <Link to="/admin" className="block py-2 text-gray-700 hover:text-brand-blue" onClick={closeMenu}>
                       Admin Dashboard
                     </Link>
                   )}
-                  <Button onClick={() => { logout(); closeMenu(); }} variant="outline" className="w-full text-red-500 mt-2">
+                  <Button onClick={handleLogout} variant="outline" className="w-full text-red-500 mt-2">
                     Logout
                   </Button>
                 </div>

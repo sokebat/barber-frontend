@@ -1,215 +1,196 @@
-// src/contexts/AuthContext.tsx
-"use client";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { Navigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import { axiosPrivate } from "../axios/axios";
+import AuthService from "../services/auth.service";
+import { UserResponse } from "../types/AuthService.types";
 
-import { useToast } from "@/hooks/use-toast";
-import AuthService from "@/services/auth.service";
-import { LoginCredentials, RegisterCredentials, User } from "@/types";
-import { jwtDecode } from "jwt-decode";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useCookies } from "react-cookie";
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-}
-interface AuthContextProps {
-  authState: AuthState;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
+// Define the shape of the AuthContext
+interface AuthContextType {
+  user: UserResponse | null;
+  token: string | null;
+  register: (data: {
+    email: string;
+    fullName: string;
+    password: string;
+    phoneNumber: string;
+    role: string;
+  }) => Promise<void>;
+  login: (data: { email: string; password: string }) => Promise<void>;
   logout: () => void;
-  isLoading: boolean;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+// Create the AuthContext
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    loading: true,
-  });
-  const { toast } = useToast();
-  const [cookies, setCookie, removeCookie] = useCookies(["session"]);
-  const authService = AuthService;
+// Utility to encode/decode user data
+const encodeUserData = (user: UserResponse): string => {
+  return btoa(JSON.stringify(user)); // Base64 encode the user data
+};
 
+const decodeUserData = (encoded: string): UserResponse => {
+  return JSON.parse(atob(encoded)); // Decode Base64 and parse JSON
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [user, setUser] = useState<UserResponse | null>(null);
+  const [token, setToken] = useState<string | null>(null); // Token state for reactivity
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+ 
+  // Check for existing user data and token on app load
   useEffect(() => {
-    const initializeAuth = async () => {
-      const session = cookies.session;
-      if (session?.apiToken) {
-        try {
-          const decoded: any = jwtDecode(session.apiToken);
-          const user = {
-            id: decoded.sub,
-            email: decoded.email || "",
-            fullName: decoded.fullName || "",
-            role: decoded.role || "admin",
-            teamId: decoded.teamId || "",
-          };
+    const encodedUser = localStorage.getItem("user");
+    const storedToken = Cookies.get("auth_token");
 
-          const currentTime = Date.now() / 1000;
-          if (decoded.exp < currentTime) {
-            throw new Error("Token expired");
-          }
-
-          setAuthState({
-            user,
-            isAuthenticated: true,
-            loading: false,
-          });
-        } catch (error) {
-          removeCookie("session", { path: "/" });
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            loading: false,
-          });
-        }
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          loading: false,
-        });
+    if (encodedUser) {
+      try {
+        const decodedUser = decodeUserData(encodedUser);
+        setUser(decodedUser);
+      } catch (error) {
+        console.error("Failed to decode user data:", error);
+        localStorage.removeItem("user");
       }
-    };
-
-    initializeAuth();
-  }, [cookies, removeCookie]);
-
-  const login = async (credentials: LoginCredentials) => {
-    try {
-      const response = await authService.login(credentials);
-      if (response.success) {
-        const { token } = response.data;
-        if (!token) {
-          throw new Error("No token received");
-        }
-
-        // Set cookie with token
-        setCookie(
-          "session",
-          { apiToken: token },
-          {
-            path: "/",
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60, // 24 hours
-          }
-        );
-
-        const decoded: any = jwtDecode(token);
-        const user = {
-          id: decoded.sub,
-          email: decoded.email,
-          fullName: decoded.fullName,
-          role: decoded.role,
-          teamId: decoded.teamId,
-        };
-
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          loading: false,
-        });
-
-        toast({
-          title: "Success",
-          description: "Login successful!",
-        });
-      } else {
-        throw new Error(response.message || "Login failed");
-      }
-    } catch (error) {
-      setAuthState((prev) => ({ ...prev, loading: false }));
-      toast({
-        title: "Error",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
-      throw error;
     }
+
+    if (storedToken) {
+      setToken(storedToken);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Add a response interceptor to handle 401 errors
+  useEffect(() => {
+    const responseInterceptor = axiosPrivate.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          setToken(null);
+          setUser(null);
+          setIsAuthenticated(false);
+          return <Navigate to="/login" />;
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Clean up the interceptor on unmount
+    return () => {
+      axiosPrivate.interceptors.response.eject(responseInterceptor);
+    };
+  }, []); // Re-run if navigate changes
+
+  const register = async (data: {
+    email: string;
+    fullName: string;
+    password: string;
+    phoneNumber: string;
+    role: string;
+  }) => {
+    const response = await AuthService.register(data);
+    if (!response.success) {
+      throw new Error(response.message);
+    }
+
+    const userData = response.data;
+    if (!userData) {
+      throw new Error("No user data returned from registration");
+    }
+
+    // Encode and store user data in localStorage
+    localStorage.setItem("user", encodeUserData(userData));
+    setUser(userData);
+    setIsAuthenticated(false); // User is not authenticated until they log in
   };
 
-  const register = async (credentials: RegisterCredentials) => {
-    try {
-      const response = await authService.register(credentials);
-      if (response.success) {
-        const { token } = response.data;
-        if (!token) {
-          throw new Error("No token received");
-        }
-
-        setCookie(
-          "session",
-          { apiToken: token },
-          {
-            path: "/",
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60, // 24 hours
-          }
-        );
-
-        const decoded: any = jwtDecode(token);
-        const user = {
-          id: decoded.sub,
-          email: decoded.email,
-          fullName: credentials.fullName,
-          role: decoded.role,
-          teamId: decoded.teamId,
-        };
-
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          loading: false,
-        });
-
-        toast({
-          title: "Success",
-          description: "Registration successful!",
-        });
-      } else {
-        throw new Error(response.message || "Registration failed");
-      }
-    } catch (error) {
-      setAuthState((prev) => ({ ...prev, loading: false }));
-      toast({
-        title: "Error",
-        description: error.message || "Registration failed",
-        variant: "destructive",
-      });
-      throw error;
+  const login = async (data: { email: string; password: string }) => {
+    const response = await AuthService.login(data);
+    if (!response.success) {
+      throw new Error(response.message);
     }
+
+    const userData = response.data;
+    if (!userData || !userData.token) {
+      throw new Error("No user data or token returned from login");
+    }
+
+    // Store the token in a cookie (expires in 1 day)
+    Cookies.set("auth_token", userData.token, {
+      expires: 1, // 1 day expiration
+      secure: true, // Only send over HTTPS (set to false for local development if not using HTTPS)
+      sameSite: "Strict", // Prevent CSRF by not sending cookie in cross-site requests
+      path: "/",
+    });
+     
+    Cookies.set("user_role", userData.role, {
+      expires: 1, // 1 day expiration
+      secure: true, // Only send over HTTPS (set to false for local development if not using HTTPS)
+      sameSite: "Strict", // Prevent CSRF by not sending cookie in cross-site requests
+      path: "/",
+    });
+
+    // Update state
+    setToken(userData.token);
+    // Encode and store user data in localStorage
+    localStorage.setItem("user", encodeUserData(userData));
+    setUser(userData);
+    console.log(userData,"userData");
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
-    removeCookie("session", { path: "/" });
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      loading: false,
-    });
-    toast({
-      title: "Logged out",
-      description: "You've been successfully logged out",
-    });
+    Cookies.remove("auth_token"); // Remove the token cookie
+    Cookies.remove("user_role"); // Remove the role cookie
+    localStorage.removeItem("user"); // Clear user data
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
+    return <Navigate to="/login" />;
   };
 
-  const value = {
-    authState,
-    login,
-    register,
-    logout,
-    isLoading: authState.loading,
-  };
+  // Handle token expiration (1 day as per your API)
+  useEffect(() => {
+    const currentToken = Cookies.get("auth_token");
+    if (currentToken) {
+      try {
+        // Decode the token to check expiration
+        const decodedToken = JSON.parse(atob(currentToken.split(".")[1]));
+        const expirationTime = decodedToken.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+        if (currentTime > expirationTime) {
+          logout(); // Log out if token is expired
+        } else {
+          setToken(currentToken);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error("Failed to decode token:", error);
+        logout(); // Log out if token is invalid
+      }
+    }
+  }, [ ]); // Run on mount and when navigate changes
+
+  return (
+    <AuthContext.Provider
+      value={{ user, token, register, login, logout, isAuthenticated }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
+// Custom hook to use the AuthContext
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

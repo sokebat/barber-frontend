@@ -10,6 +10,7 @@ import { TeamProvider } from "@/contexts/TeamContext";
 import { AppointmentProvider } from "./ApointmentContext";
 import { StoreProvider } from "./storeContext";
 const Provider = ({ children }: { children: React.ReactNode }) => {
+  
   return (
     <CookiesProvider>
       <AuthProvider>

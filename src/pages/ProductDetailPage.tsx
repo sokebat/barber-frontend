@@ -163,14 +163,12 @@ const ProductDetailPage: React.FC = () => {
               <div className="flex items-center gap-3 mb-6">
                 {product.discountPrice ? (
                   <>
-                    <span className="text-2xl font-bold">
-                      ${product.discountPrice.toFixed(2)}
-                    </span>
+                    <span className="text-2xl font-bold">${product.price-product.discountPrice}</span>
                     <span className="text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
+                      ${product.price}
                     </span>
                     <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
-                      Save ${(product.price - product.discountPrice).toFixed(2)}
+                      Save ${product.discountPrice}
                     </span>
                   </>
                 ) : (

@@ -27,24 +27,18 @@ const BookingPage: React.FC = () => {
   // Step management: 1: Service; 2: Specialist; 3: Date; 4: Time; 5: Confirm
   const [step, setStep] = useState(1);
   const [services, setServices] = useState<UIService[]>([]);
-  // Name state for customer's name
   const [name, setName] = useState<string>("");
+  const [nameError, setNameError] = useState<string>("");
   const { teams } = useTeam();
-
-  const [selectedService, setSelectedService] = useState<UIService | null>(
-    null
-  );
-  const [selectedSpecialist, setSelectedSpecialist] = useState<string | null>(
-    null
-  );
+  const [selectedService, setSelectedService] = useState<UIService | null>(null);
+  const [selectedSpecialist, setSelectedSpecialist] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const { authState } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-
   const { services: filteredServices } = useServices();
 
   // Available time slots in 12-hour format
@@ -62,26 +56,27 @@ const BookingPage: React.FC = () => {
 
   // If the user is authenticated, pre-fill the name if available
   useEffect(() => {
-    if (authState.user?.fullName) {
-      setName(authState.user.fullName);
+    if (user?.fullName) {
+      setName(user.fullName);
     }
-  }, [authState.user]);
+  }, [user]);
 
   // Get query parameters (for direct booking from other pages)
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const serviceId = queryParams.get("service");
-    const specialistId = queryParams.get("specialist");
-
     const fetchData = async () => {
+      // Wait until filteredServices and teams are available
+      if (!filteredServices.length || !teams.length) return;
+
       setLoading(true);
       try {
         setServices(filteredServices);
 
+        const queryParams = new URLSearchParams(location.search);
+        const serviceId = queryParams.get("service");
+        const specialistId = queryParams.get("specialist");
+
         if (serviceId) {
-          const service = filteredServices.find(
-            (s) => +s.id === parseInt(serviceId)
-          );
+          const service = filteredServices.find((s) => +s.id === parseInt(serviceId));
           if (service) {
             setSelectedService(service);
             setStep(2);
@@ -150,28 +145,38 @@ const BookingPage: React.FC = () => {
     return combined.toISOString();
   };
 
+  const validateName = (name: string): boolean => {
+    if (!name.trim()) {
+      setNameError("Name is required");
+      return false;
+    }
+    if (!/^[A-Za-z\s]+$/.test(name)) {
+      setNameError("Name can only contain letters and spaces");
+      return false;
+    }
+    setNameError("");
+    return true;
+  };
+
   const handleBooking = async () => {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       toast({
         title: "Login Required",
         description: "Please log in to complete your booking.",
         variant: "destructive",
       });
-      navigate("/login?redirect=book");
+      navigate("/login?redirect=/book");
       return;
     }
 
-    if (
-      !selectedService ||
-      !selectedSpecialist ||
-      !selectedDate ||
-      !selectedTime ||
-      !name
-    ) {
+    if (!validateName(name)) {
+      return;
+    }
+
+    if (!selectedService || !selectedSpecialist || !selectedDate || !selectedTime) {
       toast({
         title: "Incomplete Booking",
-        description:
-          "Please complete all booking steps, including entering your name.",
+        description: "Please complete all booking steps.",
         variant: "destructive",
       });
       return;
@@ -187,7 +192,7 @@ const BookingPage: React.FC = () => {
       const formattedAppointmentDate = format(selectedDate, "yyyy-MM-dd");
 
       const response = await AppointmentService.createAppointment({
-        id: Math.floor(Math.random() * 100000),
+        id: Math.random(),
         serviceName: selectedService.name,
         specialistName: selectedSpecialist,
         customerName: name,
@@ -200,23 +205,21 @@ const BookingPage: React.FC = () => {
       if (response.success) {
         toast({
           title: "Booking Successful",
-          description:
-            "Your appointment has been scheduled. You will receive a confirmation email shortly.",
+          description: "Your appointment has been scheduled. You will receive a confirmation email shortly.",
         });
-        navigate("/book");
-        setStep(1);
+        navigate("/appointments"); // Redirect to appointments page
       } else {
         toast({
           title: "Booking Failed",
-          description: "Failed to schedule your appointment. Please try again.",
+          description: response.message || "Failed to schedule your appointment. Please try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error booking appointment:", error);
       toast({
         title: "Booking Failed",
-        description: "Failed to schedule your appointment. Please try again.",
+        description: error.message || "Failed to schedule your appointment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -256,12 +259,10 @@ const BookingPage: React.FC = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-600">
-                      {service.description}
-                    </p>
+                    <p className="text-sm text-gray-600">{service.description}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full">
+                    <Button className="w-full" aria-label={`Select ${service.name} service`}>
                       Select Service <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
@@ -298,12 +299,10 @@ const BookingPage: React.FC = () => {
                     <CardDescription>{specialist.specialty}</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {specialist.description}
-                    </p>
+                    <p className="text-sm text-gray-600 line-clamp-3">{specialist.description}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full">
+                    <Button className="w-full" aria-label={`Select ${specialist.name} as specialist`}>
                       Select Specialist <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
@@ -316,20 +315,27 @@ const BookingPage: React.FC = () => {
       case 3:
         return (
           <div className="animate-fade-in">
-            <SectionTitle
-              title="Enter Your Name & Select a Date"
-              align="left"
-            />
-            <div className="flex flex-col  justify-center mb-6">
-              <div className="mt-6 mb-8 max-w-md">
-                <label className="block text-lg font-medium mb-2">
+            <SectionTitle title="Enter Your Name & Select a Date" align="left" />
+            <div className="flex flex-col items-center justify-center mb-6">
+              <div className="mt-6 mb-8 max-w-md w-full">
+                <label htmlFor="name" className="block text-lg font-medium mb-2">
                   Your Name
                 </label>
                 <Input
+                  id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    validateName(e.target.value);
+                  }}
                   placeholder="Enter your name"
+                  aria-describedby={nameError ? "name-error" : undefined}
                 />
+                {nameError && (
+                  <p id="name-error" className="text-red-500 text-sm mt-1">
+                    {nameError}
+                  </p>
+                )}
               </div>
               <Calendar
                 mode="single"
@@ -337,20 +343,14 @@ const BookingPage: React.FC = () => {
                 onSelect={handleDateSelect}
                 className="rounded-md border bg-card p-3 w-72 pointer-events-auto"
                 disabled={(date) => date < new Date() || date.getDay() === 0}
+                aria-label="Select appointment date"
               />
             </div>
             <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => setStep(2)}
-                className="mr-2"
-              >
+              <Button variant="outline" onClick={() => setStep(2)} className="mr-2">
                 Back to Specialists
               </Button>
-              <Button
-                onClick={() => selectedDate && setStep(4)}
-                disabled={!selectedDate}
-              >
+              <Button onClick={() => selectedDate && setStep(4)} disabled={!selectedDate}>
                 Continue <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -368,17 +368,14 @@ const BookingPage: React.FC = () => {
                   variant={selectedTime === time ? "default" : "outline"}
                   onClick={() => handleTimeSelect(time)}
                   className="h-12"
+                  aria-label={`Select ${time} time slot`}
                 >
                   {time}
                 </Button>
               ))}
             </div>
             <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={() => setStep(3)}
-                className="mr-2"
-              >
+              <Button variant="outline" onClick={() => setStep(3)} className="mr-2">
                 Back to Date
               </Button>
               <Button onClick={() => setStep(5)} disabled={!selectedTime}>
@@ -395,9 +392,7 @@ const BookingPage: React.FC = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Booking Summary</CardTitle>
-                <CardDescription>
-                  Please review your appointment details
-                </CardDescription>
+                <CardDescription>Please review your appointment details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between border-b pb-2">
@@ -414,9 +409,7 @@ const BookingPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Date:</span>
-                  <span>
-                    {selectedDate ? format(selectedDate, "PPPP") : ""}
-                  </span>
+                  <span>{selectedDate ? format(selectedDate, "PPPP") : ""}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Time:</span>
@@ -435,7 +428,7 @@ const BookingPage: React.FC = () => {
                 <Button variant="outline" onClick={() => setStep(4)}>
                   Back
                 </Button>
-                <Button onClick={handleBooking} disabled={loading}>
+                <Button onClick={handleBooking} disabled={loading || !!nameError}>
                   {loading ? "Processing..." : "Confirm Booking"}
                 </Button>
               </CardFooter>
@@ -456,7 +449,6 @@ const BookingPage: React.FC = () => {
           <p className="text-xl">
             Schedule your beauty or wellness service in a few simple steps.
           </p>
-          {/* Name Field */}
         </div>
       </div>
 
@@ -465,36 +457,32 @@ const BookingPage: React.FC = () => {
           {/* Progress Indicator */}
           <div className="mb-12">
             <div className="flex justify-between items-center max-w-3xl mx-auto">
-              {["Service", "Specialist", "Date", "Time", "Confirm"].map(
-                (label, index) => {
-                  const stepNum = index + 1;
-                  const isActive = step === stepNum;
-                  const isCompleted = step > stepNum;
+              {["Service", "Specialist", "Date", "Time", "Confirm"].map((label, index) => {
+                const stepNum = index + 1;
+                const isActive = step === stepNum;
+                const isCompleted = step > stepNum;
 
-                  return (
-                    <div key={label} className="flex flex-col items-center">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-white mb-2 ${
-                          isActive
-                            ? "bg-brand-blue"
-                            : isCompleted
-                            ? "bg-green-500"
-                            : "bg-gray-300"
-                        }`}
-                      >
-                        {stepNum}
-                      </div>
-                      <span
-                        className={`text-sm ${
-                          isActive ? "text-brand-blue font-medium" : ""
-                        }`}
-                      >
-                        {label}
-                      </span>
+                return (
+                  <div key={label} className="flex flex-col items-center">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white mb-2 ${
+                        isActive
+                          ? "bg-brand-blue"
+                          : isCompleted
+                          ? "bg-green-500"
+                          : "bg-gray-300"
+                      }`}
+                    >
+                      {stepNum}
                     </div>
-                  );
-                }
-              )}
+                    <span
+                      className={`text-sm ${isActive ? "text-brand-blue font-medium" : ""}`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="relative max-w-3xl mx-auto mt-4 hidden sm:block">
