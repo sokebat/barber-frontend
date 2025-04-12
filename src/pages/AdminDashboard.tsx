@@ -14,13 +14,11 @@ import { useStore } from "@/contexts/storeContext";
 import { useTeam } from "@/contexts/TeamContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
-import { Menu } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 const AdminDashboard: React.FC = () => {
-  const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user} = useAuth();
+  
   const { toast } = useToast();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -28,7 +26,7 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { teams } = useTeam();
-  const { appointments: allAppointments, getAllAppointments } =
+  const { appointments , getAllAppointments } =
     useAppointment();
   const { services } = useServices();
   const { products, fetchProducts } = useStore();
@@ -57,8 +55,8 @@ const AdminDashboard: React.FC = () => {
 
   const getOverviewStats = () => {
     return {
-      totalAppointments: allAppointments.length,
-      pendingAppointments: allAppointments.filter((a) => !a.isApproved).length,
+      totalAppointments: appointments.length,
+      pendingAppointments: appointments.filter((a) => !a.isApproved).length,
       totalServices: services.length,
       totalProducts: products.length,
       totalTeamMembers: teams.length,
@@ -140,7 +138,7 @@ const AdminDashboard: React.FC = () => {
             {activeTab === "dashboard" && (
               <DashboardTab
                 stats={stats}
-                appointments={allAppointments}
+                appointments={appointments}
                 setActiveTab={setActiveTab}
                 formatDate={formatDate}
               />

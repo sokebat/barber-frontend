@@ -1,22 +1,11 @@
-import { axiosPrivate, axiosPublic } from "@/axios/axios";
-import { Service } from "@/types";
+import { axiosPublic } from "@/axios/axios";
 import { ServiceCategory, UpdateServiceDto } from "@/types/ServiceService.types";
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T | null;
-  message: string;
-  status: number;
-  error?: any;
-}
+import { ApiResponse } from "@/types/team.type";
 
 class ServiceService {
-  // Get all services
-  async getAllServices(): Promise<ApiResponse<Service[]>> {
+  async getAllServices(): Promise<ApiResponse<ServiceCategory[]>> {
     try {
       const res = await axiosPublic.get("/OurServices");
-      console.log(res.data, "res.data");
-      console.log(res, "all services");
       return {
         success: true,
         data: res.data,
@@ -25,13 +14,12 @@ class ServiceService {
       };
     } catch (error: any) {
       return this.handleError(error);
-    }
+      }
   }
 
-  // Get a single service by ID
-  async getServiceById(id: string): Promise<ApiResponse<Service>> {
+  async getServiceById(id: string): Promise<ApiResponse<ServiceCategory>> {
     try {
-      const res = await axiosPublic.get(`/services/${id}`);
+      const res = await axiosPublic.get(`/OurServices/${id}`);
       return {
         success: true,
         data: res.data,
@@ -43,10 +31,9 @@ class ServiceService {
     }
   }
 
-  // Create a new service
-  async createService(data: ServiceCategory): Promise<ApiResponse<Service>> {
+  async createService(data: ServiceCategory): Promise<ApiResponse<ServiceCategory>> {
     try {
-      const res = await axiosPublic.post("/services", data);
+      const res = await axiosPublic.post("/OurServices", data);
       return {
         success: true,
         data: res.data,
@@ -58,13 +45,12 @@ class ServiceService {
     }
   }
 
-  // Update an existing service
   async updateService(
     id: string,
     data: UpdateServiceDto
-  ): Promise<ApiResponse<Service>> {
+  ): Promise<ApiResponse<ServiceCategory>> {
     try {
-      const res = await axiosPrivate.put(`/services/${id}`, data);
+      const res = await axiosPublic.put(`/OurServices/${id}`, data);
       return {
         success: true,
         data: res.data,
@@ -76,10 +62,9 @@ class ServiceService {
     }
   }
 
-  // Delete a service
   async deleteService(id: string): Promise<ApiResponse<null>> {
     try {
-      const res = await axiosPrivate.delete(`/services/${id}`);
+      const res = await axiosPublic.delete(`/OurServices/${id}`);
       return {
         success: true,
         data: null,
@@ -91,7 +76,6 @@ class ServiceService {
     }
   }
 
-  // Error handling utility
   private handleError(error: any): ApiResponse<any> {
     return {
       success: false,

@@ -20,6 +20,8 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import Provider from "./contexts/provider";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import CheckoutPage from "./pages/CheckoutPage";
+import PaymentSuccess from "./pages/PayementSucess";
+import PaymentFailure from "./pages/PayementFailure";
 const App = () => (
   
   <Provider>
@@ -32,6 +34,8 @@ const App = () => (
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failure" element={<PaymentFailure />} />
         <Route path="/store" element={<StorePage />} />
         <Route path="store">
           <Route index element={<StorePage />} />

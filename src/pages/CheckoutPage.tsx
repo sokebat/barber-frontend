@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Layout from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCart } from '@/contexts/CartContext';
-import { useToast } from '@/hooks/use-toast';
-import { CreditCard, ShoppingBag, Truck, User } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Layout from "@/components/layout/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
+import { ShoppingBag, Truck } from "lucide-react";
+import * as CryptoJS from "crypto-js";
 
 interface UserInfo {
   fullName: string;
@@ -19,12 +20,6 @@ interface UserInfo {
   postalCode: string;
 }
 
-interface PaymentInfo {
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-}
-
 interface FormErrors {
   fullName?: string;
   email?: string;
@@ -32,9 +27,6 @@ interface FormErrors {
   address?: string;
   city?: string;
   postalCode?: string;
-  cardNumber?: string;
-  expiryDate?: string;
-  cvv?: string;
 }
 
 const CheckoutPage: React.FC = () => {
@@ -44,22 +36,23 @@ const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [userInfo, setUserInfo] = useState<UserInfo>({
-    fullName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-  });
-
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
+  const [transactionUuid, setTransactionUuid] = useState("");
+
+  // eSewa configuration
+  const secretKey = import.meta.env.VITE_ESEWA_SECRET_KEY || "8gBm/:&EnhH.1/q"; // Fallback for testing
+  const productCode = "EPAYTEST";
+  const successUrl = `${window.location.origin}/payment-success`;
+  const failureUrl = `${window.location.origin}/payment-failure`;
 
   // Redirect to cart if cart is empty
   useEffect(() => {
@@ -69,7 +62,7 @@ const CheckoutPage: React.FC = () => {
         description: "Please add items to your cart before checking out.",
         variant: "destructive",
       });
-      navigate('/cart');
+      navigate("/cart");
     }
   }, [cart.items, navigate, toast]);
 
@@ -77,20 +70,35 @@ const CheckoutPage: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && user) {
       setUserInfo({
-        fullName: user.fullName || '',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        address: '',
-        city: '',
-        postalCode: '',
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phone: user.phoneNumber || "",
+        address: "",
+        city: "",
+        postalCode: "",
       });
     }
   }, [isAuthenticated, user]);
 
+  // Generate transaction UUID
+  useEffect(() => {
+    const generateTransactionUuid = () => {
+      const currentTime = new Date();
+      const formattedTime =
+        currentTime.toISOString().slice(2, 10).replace(/-/g, "") +
+        "-" +
+        currentTime.getHours() +
+        currentTime.getMinutes() +
+        currentTime.getSeconds();
+      setTransactionUuid(formattedTime);
+    };
+    generateTransactionUuid();
+  }, []);
+
+  // Validate user info
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Validate user info
     if (!userInfo.fullName.trim()) newErrors.fullName = "Full name is required";
     if (!userInfo.email.trim()) {
       newErrors.email = "Email is required";
@@ -110,27 +118,21 @@ const CheckoutPage: React.FC = () => {
       newErrors.postalCode = "Postal code must be 5 digits";
     }
 
-    // Validate payment info
-    if (!paymentInfo.cardNumber.trim()) {
-      newErrors.cardNumber = "Card number is required";
-    } else if (!/^\d{16}$/.test(paymentInfo.cardNumber.replace(/\s/g, ''))) {
-      newErrors.cardNumber = "Card number must be 16 digits";
-    }
-    if (!paymentInfo.expiryDate.trim()) {
-      newErrors.expiryDate = "Expiry date is required";
-    } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(paymentInfo.expiryDate)) {
-      newErrors.expiryDate = "Expiry date must be in MM/YY format";
-    }
-    if (!paymentInfo.cvv.trim()) {
-      newErrors.cvv = "CVV is required";
-    } else if (!/^\d{3}$/.test(paymentInfo.cvv)) {
-      newErrors.cvv = "CVV must be 3 digits";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Generate eSewa signature
+  const generateSignature = (totalAmount: string) => {
+    const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${productCode}`;
+    console.log("Signature Message:", message); // Debug
+    console.log("Secret Key:", secretKey); // Debug (remove in production)
+    const hash = CryptoJS.HmacSHA256(message, secretKey);
+    const hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
+    return hashInBase64;
+  };
+
+  // Handle form submission to eSewa
   const handleConfirmOrder = async () => {
     if (!validateForm()) {
       toast({
@@ -143,25 +145,56 @@ const CheckoutPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // In a real application, this would process the payment and create an order
-      // Example: Integrate with Stripe or another payment gateway
-      // const paymentResponse = await processPayment(paymentInfo, cart.total);
+      const totalAmount = cart.total.toFixed(2);
+      const signature = generateSignature(totalAmount);
 
-      // Simulate a delay for the API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Store cart total for verification
+      localStorage.setItem("cartTotal", totalAmount);
 
-      toast({
-        title: "Order Confirmed",
-        description: "Thank you for your purchase! Your order has been placed.",
+      // Log form data for debugging
+      const fields = {
+        amount: totalAmount,
+        tax_amount: "0",
+        total_amount: totalAmount,
+        transaction_uuid: transactionUuid,
+        product_code: productCode,
+        product_service_charge: "0",
+        product_delivery_charge: "0",
+        success_url: successUrl,
+        failure_url: failureUrl,
+        signed_field_names: "total_amount,transaction_uuid,product_code",
+        signature: signature,
+      };
+      console.log("eSewa Form Fields:", fields);
+
+      // Create a form programmatically
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "https://rc-epay.esewa.com.np/api/epay/main/v2/form";
+      form.target = "_blank";
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
       });
 
-      clearCart();
-      navigate('/orders'); // Redirect to an orders page (you can create this later)
-    } catch (error) {
-      console.error("Error confirming order:", error);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+
       toast({
-        title: "Order Failed",
-        description: "There was an error processing your order. Please try again.",
+        title: "Redirecting to eSewa",
+        description: "You are being redirected to the eSewa payment page.",
+      });
+    } catch (error) {
+      console.error("Error initiating eSewa payment:", error);
+      toast({
+        title: "Payment Failed",
+        description:
+          "There was an error initiating the payment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -173,19 +206,6 @@ const CheckoutPage: React.FC = () => {
     const { name, value } = e.target;
     setUserInfo((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: undefined }));
-  };
-
-  const handlePaymentInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPaymentInfo((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
-  };
-
-  // Format card number as XXXX XXXX XXXX XXXX
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    const match = cleaned.match(/.{1,4}/g);
-    return match ? match.join(' ') : cleaned;
   };
 
   return (
@@ -201,7 +221,10 @@ const CheckoutPage: React.FC = () => {
                 <ShoppingBag className="h-5 w-5" /> Order Summary
               </h2>
               {cart.items.map((item) => (
-                <div key={item.product.id} className="flex items-center gap-4 mb-4">
+                <div
+                  key={item.product.id}
+                  className="flex items-center gap-4 mb-4"
+                >
                   <img
                     src={item.product.imageUrl}
                     alt={item.product.name}
@@ -209,14 +232,22 @@ const CheckoutPage: React.FC = () => {
                   />
                   <div className="flex-1">
                     <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-gray-500">{item.product.categoryName}</p>
+                    <p className="text-sm text-gray-500">
+                      {item.product.categoryName}
+                    </p>
                     <p className="text-sm">
                       Quantity: {item.quantity} x $
-                      {(item.product.discountPrice || item.product.price).toFixed(2)}
+                      {(
+                        item.product.discountPrice || item.product.price
+                      ).toFixed(2)}
                     </p>
                   </div>
                   <p className="font-medium">
-                    ${((item.product.discountPrice || item.product.price) * item.quantity).toFixed(2)}
+                    $
+                    {(
+                      (item.product.discountPrice || item.product.price) *
+                      item.quantity
+                    ).toFixed(2)}
                   </p>
                 </div>
               ))}
@@ -241,11 +272,16 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.fullName}
                     onChange={handleUserInfoChange}
                     placeholder="John Doe"
-                    className={errors.fullName ? 'border-red-500' : ''}
-                    aria-describedby={errors.fullName ? 'fullName-error' : undefined}
+                    className={errors.fullName ? "border-red-500" : ""}
+                    aria-describedby={
+                      errors.fullName ? "fullName-error" : undefined
+                    }
                   />
                   {errors.fullName && (
-                    <p id="fullName-error" className="text-red-500 text-sm mt-1">
+                    <p
+                      id="fullName-error"
+                      className="text-red-500 text-sm mt-1"
+                    >
                       {errors.fullName}
                     </p>
                   )}
@@ -259,8 +295,8 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.email}
                     onChange={handleUserInfoChange}
                     placeholder="john.doe@example.com"
-                    className={errors.email ? 'border-red-500' : ''}
-                    aria-describedby={errors.email ? 'email-error' : undefined}
+                    className={errors.email ? "border-red-500" : ""}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                   />
                   {errors.email && (
                     <p id="email-error" className="text-red-500 text-sm mt-1">
@@ -276,8 +312,8 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.phone}
                     onChange={handleUserInfoChange}
                     placeholder="1234567890"
-                    className={errors.phone ? 'border-red-500' : ''}
-                    aria-describedby={errors.phone ? 'phone-error' : undefined}
+                    className={errors.phone ? "border-red-500" : ""}
+                    aria-describedby={errors.phone ? "phone-error" : undefined}
                   />
                   {errors.phone && (
                     <p id="phone-error" className="text-red-500 text-sm mt-1">
@@ -293,8 +329,10 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.address}
                     onChange={handleUserInfoChange}
                     placeholder="123 Main St"
-                    className={errors.address ? 'border-red-500' : ''}
-                    aria-describedby={errors.address ? 'address-error' : undefined}
+                    className={errors.address ? "border-red-500" : ""}
+                    aria-describedby={
+                      errors.address ? "address-error" : undefined
+                    }
                   />
                   {errors.address && (
                     <p id="address-error" className="text-red-500 text-sm mt-1">
@@ -310,8 +348,8 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.city}
                     onChange={handleUserInfoChange}
                     placeholder="New York"
-                    className={errors.city ? 'border-red-500' : ''}
-                    aria-describedby={errors.city ? 'city-error' : undefined}
+                    className={errors.city ? "border-red-500" : ""}
+                    aria-describedby={errors.city ? "city-error" : undefined}
                   />
                   {errors.city && (
                     <p id="city-error" className="text-red-500 text-sm mt-1">
@@ -327,11 +365,16 @@ const CheckoutPage: React.FC = () => {
                     value={userInfo.postalCode}
                     onChange={handleUserInfoChange}
                     placeholder="12345"
-                    className={errors.postalCode ? 'border-red-500' : ''}
-                    aria-describedby={errors.postalCode ? 'postalCode-error' : undefined}
+                    className={errors.postalCode ? "border-red-500" : ""}
+                    aria-describedby={
+                      errors.postalCode ? "postalCode-error" : undefined
+                    }
                   />
                   {errors.postalCode && (
-                    <p id="postalCode-error" className="text-red-500 text-sm mt-1">
+                    <p
+                      id="postalCode-error"
+                      className="text-red-500 text-sm mt-1"
+                    >
                       {errors.postalCode}
                     </p>
                   )}
@@ -344,82 +387,24 @@ const CheckoutPage: React.FC = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-6">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <CreditCard className="h-5 w-5" /> Payment Information
+                <ShoppingBag className="h-5 w-5" /> Payment
               </h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="cardNumber">Card Number</Label>
-                  <Input
-                    id="cardNumber"
-                    name="cardNumber"
-                    value={formatCardNumber(paymentInfo.cardNumber)}
-                    onChange={handlePaymentInfoChange}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                    className={errors.cardNumber ? 'border-red-500' : ''}
-                    aria-describedby={errors.cardNumber ? 'cardNumber-error' : undefined}
-                  />
-                  {errors.cardNumber && (
-                    <p id="cardNumber-error" className="text-red-500 text-sm mt-1">
-                      {errors.cardNumber}
-                    </p>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      name="expiryDate"
-                      value={paymentInfo.expiryDate}
-                      onChange={handlePaymentInfoChange}
-                      placeholder="MM/YY"
-                      maxLength={5}
-                      className={errors.expiryDate ? 'border-red-500' : ''}
-                      aria-describedby={errors.expiryDate ? 'expiryDate-error' : undefined}
-                    />
-                    {errors.expiryDate && (
-                      <p id="expiryDate-error" className="text-red-500 text-sm mt-1">
-                        {errors.expiryDate}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="cvv">CVV</Label>
-                    <Input
-                      id="cvv"
-                      name="cvv"
-                      value={paymentInfo.cvv}
-                      onChange={handlePaymentInfoChange}
-                      placeholder="123"
-                      maxLength={3}
-                      className={errors.cvv ? 'border-red-500' : ''}
-                      aria-describedby={errors.cvv ? 'cvv-error' : undefined}
-                    />
-                    {errors.cvv && (
-                      <p id="cvv-error" className="text-red-500 text-sm mt-1">
-                        {errors.cvv}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <h3 className="font-medium mb-2">We Accept:</h3>
-                  <div className="flex justify-between">
-                    {/* Placeholder for payment method icons */}
-                    <div className="w-12 h-8 bg-gray-200 rounded"></div>
-                    <div className="w-12 h-8 bg-gray-200 rounded"></div>
-                    <div className="w-12 h-8 bg-gray-200 rounded"></div>
-                    <div className="w-12 h-8 bg-gray-200 rounded"></div>
-                  </div>
+                  <p className="text-gray-600">
+                    You will be redirected to eSewa to complete your payment.
+                  </p>
+                  <p className="font-medium mt-2">
+                    Total Amount: ${cart.total.toFixed(2)}
+                  </p>
                 </div>
                 <Button
                   className="w-full mt-4"
                   onClick={handleConfirmOrder}
                   disabled={loading}
-                  aria-label="Confirm order"
+                  aria-label="Pay with eSewa"
                 >
-                  {loading ? "Processing..." : "Confirm Order"}
+                  {loading ? "Processing..." : "Pay with eSewa"}
                 </Button>
                 <Button asChild variant="outline" className="w-full mt-2">
                   <Link to="/cart">Back to Cart</Link>

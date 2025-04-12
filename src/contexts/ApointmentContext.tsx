@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useState } from "react";
 import AppointmentService from "@/services/appointment.service";
 import { Appointment } from "@/types/AppointmentService.types";
 
@@ -25,26 +25,31 @@ interface AppointmentProviderProps {
 }
 
 export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ children }) => {
-  const [loading, setLoading] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [appointments, setAppointments] = React.useState<Appointment[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
 
-  // Get all appointments with proper loading/error state
   const getAllAppointments = async (): Promise<ApiResponse<Appointment[]>> => {
     setLoading(true);
     setError(null);
     try {
       const response = await AppointmentService.getAllAppointments();
       if (response.success && response.data) {
-        console.log(response.data,"full appoinments")
         setAppointments(response.data);
       } else {
         setError(response.message);
       }
       return response;
-    } catch (err) {
-      setError("An unexpected error occurred");
-      throw err;
+    } catch (err: any) {
+      const message = err.message || "An unexpected error occurred";
+      setError(message);
+      return {
+        success: false,
+        data: null,
+        message,
+        status: 500,
+        error: err,
+      };
     } finally {
       setLoading(false);
     }
@@ -59,9 +64,16 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
         setError(response.message);
       }
       return response;
-    } catch (err) {
-      setError("An unexpected error occurred");
-      throw err;
+    } catch (err: any) {
+      const message = err.message || "An unexpected error occurred";
+      setError(message);
+      return {
+        success: false,
+        data: null,
+        message,
+        status: 500,
+        error: err,
+      };
     } finally {
       setLoading(false);
     }

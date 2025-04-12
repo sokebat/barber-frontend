@@ -62,7 +62,7 @@ const CategoriesTab = () => {
       }
     };
     loadCategories();
-  }, [ ]);
+  }, []);
 
   // Handle adding a new category
   const handleAddCategory = async () => {
@@ -198,7 +198,6 @@ const CategoriesTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>

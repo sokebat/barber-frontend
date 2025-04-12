@@ -1,5 +1,4 @@
-// types/AppointmentService.types.ts
-export interface ServiceItem {
+ export interface ServiceItem {
   id: number;
   image: string;
   title: string;
@@ -20,34 +19,13 @@ export interface UIService {
   id: string; // Format: `${categoryId}-${itemId}`
   name: string;
   subtitle: string;
-  description: string; // Combines item subtitle and category description
-  serviceImageUrl: string; // Item image, fallback to category image
-  price: number;
-  type: string;
-  duration: string; // Not in JSON, adding for completeness
-  categoryId: number;
-  categoryName: string;
-}
-
-export interface ServicesContextProps {
-  services: UIService[];
-  serviceCategories: ServiceCategory[];
-  selectedCategory: number | null;
-  searchTerm: string;
-  loading: boolean;
-  error: string | null;
-  setSelectedCategory: (categoryId: number | null) => void;
-  setSearchTerm: (term: string) => void;
-  filteredServices: UIService[];
-  resetFilters: () => void;
-}
-
-export interface Services {
-  id: number;
-  name: string;
   description: string;
   serviceImageUrl: string;
-  data: ServiceItem[];
+  price: number;
+  type: string;
+  duration: string;
+  categoryId: number;
+  categoryName: string;
 }
 
 export interface UpdateServiceDto {
@@ -64,3 +42,39 @@ export interface UpdateServiceDto {
     type?: string;
   }[];
 }
+
+
+export interface ServicesContextProps {
+  services: UIService[];
+  serviceCategories: ServiceCategory[];
+  selectedCategory: number | null;
+  setSelectedCategory: (categoryId: number | null) => void;
+  searchTerm: string;
+  fetchServices: () => void;
+  setSearchTerm: (term: string) => void;
+  filteredServices: UIService[];
+  resetFilters: () => void;
+  loading: boolean;
+  error: string | null;
+}
+
+
+// Utility to transform ServiceCategory to UIService
+export const transformToUIServices = (
+  categories: ServiceCategory[]
+): UIService[] => {
+  return categories.flatMap((category) =>
+    category.data.map((item) => ({
+      id: `${category.id}-${item.id}`,
+      name: item.title,
+      subtitle: item.subtitle,
+      description: `${item.subtitle} - ${category.description}`,
+      serviceImageUrl: item.image || category.serviceImageUrl,
+      price: item.price,
+      type: item.type,
+      duration: "30 minutes", // Placeholder; update when backend supports duration
+      categoryId: category.id,
+      categoryName: category.name,
+    }))
+  );
+};

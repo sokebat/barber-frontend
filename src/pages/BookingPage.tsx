@@ -14,24 +14,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useServices } from "@/contexts/ServiceContext";
 import { useTeam } from "@/contexts/TeamContext";
 import { useToast } from "@/hooks/use-toast";
-import { UIService } from "@/types/AppointmentService.types";
+import { UIService } from "@/types/ServiceService.types";
 import AppointmentService from "@/services/appointment.service";
 import { Team } from "@/types/team.type";
-import { format, parse } from "date-fns";
-import { ArrowRight } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
+import { motion, AnimatePresence } from "framer-motion"; 
 
 const BookingPage: React.FC = () => {
-  // Step management: 1: Service; 2: Specialist; 3: Date; 4: Time; 5: Confirm
   const [step, setStep] = useState(1);
   const [services, setServices] = useState<UIService[]>([]);
   const [name, setName] = useState<string>("");
   const [nameError, setNameError] = useState<string>("");
   const { teams } = useTeam();
   const [selectedService, setSelectedService] = useState<UIService | null>(null);
-  const [selectedSpecialist, setSelectedSpecialist] = useState<string | null>(null);
+  const [selectedSpecialist, setSelectedSpecialist] = useState<Team | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -41,30 +41,34 @@ const BookingPage: React.FC = () => {
   const location = useLocation();
   const { services: filteredServices } = useServices();
 
-  // Available time slots in 12-hour format
+  // Time slots (24-hour format, aligned with backend)
   const timeSlots = [
-    "9:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "1:00 PM",
-    "2:00 PM",
-    "3:00 PM",
-    "4:00 PM",
-    "5:00 PM",
+    "09:00",
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
   ];
 
-  // If the user is authenticated, pre-fill the name if available
+  // Mock unavailable slots (replace with API call if available)
+  const unavailableSlots = selectedDate
+    ? ["10:00", "14:00"] // Example: slots booked on selected date
+    : [];
+
+  // Pre-fill name if authenticated
   useEffect(() => {
     if (user?.fullName) {
       setName(user.fullName);
     }
   }, [user]);
 
-  // Get query parameters (for direct booking from other pages)
+  // Handle query parameters
   useEffect(() => {
     const fetchData = async () => {
-      // Wait until filteredServices and teams are available
       if (!filteredServices.length || !teams.length) return;
 
       setLoading(true);
@@ -76,25 +80,36 @@ const BookingPage: React.FC = () => {
         const specialistId = queryParams.get("specialist");
 
         if (serviceId) {
-          const service = filteredServices.find((s) => +s.id === parseInt(serviceId));
+          const service = filteredServices.find((s) => s.id === serviceId);
           if (service) {
             setSelectedService(service);
             setStep(2);
+          } else {
+            toast({
+              title: "Invalid Service",
+              description: "The selected service is not available.",
+              variant: "destructive",
+            });
           }
         }
 
         if (specialistId) {
-          const specialist = teams.find((s) => s.id === parseInt(specialistId));
+          const specialist = teams.find((s) => s.id === specialistId);
           if (specialist) {
-            setSelectedSpecialist(specialist.name);
-            setStep(serviceId ? 3 : 1);
+            setSelectedSpecialist(specialist);
+            setStep(serviceId ? 3 : 2);
+          } else {
+            toast({
+              title: "Invalid Specialist",
+              description: "The selected specialist is not available.",
+              variant: "destructive",
+            });
           }
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
         toast({
           title: "Error",
-          description: "Failed to load booking data. Please try again.",
+          description: "Failed to load booking data.",
           variant: "destructive",
         });
       } finally {
@@ -111,38 +126,19 @@ const BookingPage: React.FC = () => {
   };
 
   const handleSpecialistSelect = (specialist: Team) => {
-    setSelectedSpecialist(specialist.name);
+    setSelectedSpecialist(specialist);
     setStep(3);
   };
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
+    setSelectedTime(""); // Reset time when date changes
     if (date) setStep(4);
   };
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time);
     setStep(5);
-  };
-
-  // Helper: Convert 12-hour time (e.g., "1:00 PM") to 24-hour format string "HH:mm:ss"
-  const convertTo24HourFormat = (time12h: string) => {
-    const parsedTime = parse(time12h, "h:mm a", new Date());
-    return format(parsedTime, "HH:mm:ss");
-  };
-
-  // Helper: Combine selectedDate and 24-hour formatted time to form an ISO datetime string
-  const combineDateAndTime = (date: Date, time24: string) => {
-    const [hours, minutes, seconds] = time24.split(":").map(Number);
-    const combined = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      hours,
-      minutes,
-      seconds
-    );
-    return combined.toISOString();
   };
 
   const validateName = (name: string): boolean => {
@@ -184,42 +180,34 @@ const BookingPage: React.FC = () => {
 
     try {
       setLoading(true);
-      // Convert the selected time to 24-hour format
-      const time24 = convertTo24HourFormat(selectedTime);
-      // Combine the selected date and time into an ISO datetime string
-      const appointmentCombined = combineDateAndTime(selectedDate, time24);
-      // Format the appointment date as yyyy-MM-dd
-      const formattedAppointmentDate = format(selectedDate, "yyyy-MM-dd");
+      const appointmentDate = format(selectedDate, "yyyy-MM-dd");
 
       const response = await AppointmentService.createAppointment({
-        id: Math.random(),
         serviceName: selectedService.name,
-        specialistName: selectedSpecialist,
+        specialistName: selectedSpecialist.name,
         customerName: name,
-        appointment: appointmentCombined,
-        appointmentDate: formattedAppointmentDate,
-        appointmentTime: time24,
+        appointmentDate,
+        appointmentTime: selectedTime,
         isApproved: false,
       });
 
       if (response.success) {
         toast({
           title: "Booking Successful",
-          description: "Your appointment has been scheduled. You will receive a confirmation email shortly.",
+          description: "Your appointment has been scheduled. Check your appointments for details.",
         });
-        navigate("/appointments"); // Redirect to appointments page
+        navigate("/book ");
       } else {
         toast({
           title: "Booking Failed",
-          description: response.message || "Failed to schedule your appointment. Please try again.",
+          description: response.message || "Unable to schedule your appointment.",
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error("Error booking appointment:", error);
       toast({
         title: "Booking Failed",
-        description: error.message || "Failed to schedule your appointment. Please try again.",
+        description: error.message || "An unexpected error occurred.",
         variant: "destructive",
       });
     } finally {
@@ -227,97 +215,157 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  // Render step content based on current step
+  const handleReset = () => {
+    setStep(1);
+    setSelectedService(null);
+    setSelectedSpecialist(null);
+    setSelectedDate(undefined);
+    setSelectedTime("");
+    setName(user?.fullName || "");
+    setNameError("");
+  };
+
   const renderStep = () => {
     switch (step) {
       case 1:
         return (
-          <div className="animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             <SectionTitle title="Choose a Service" align="left" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service) => (
                 <Card
                   key={service.id}
-                  className={`cursor-pointer transition-all ${
+                  className={`cursor-pointer transition-all duration-300 rounded-xl overflow-hidden ${
                     selectedService?.id === service.id
-                      ? "ring-2 ring-brand-blue"
-                      : "hover:shadow-md"
+                      ? "ring-2 ring-brand-blue shadow-lg"
+                      : "hover:shadow-xl hover:scale-105"
                   }`}
                   onClick={() => handleServiceSelect(service)}
                 >
                   <div className="h-40 overflow-hidden">
                     <img
-                      src={service.serviceImageUrl}
+                      src={service.serviceImageUrl || "https://via.placeholder.com/400x200"}
                       alt={service.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     />
                   </div>
                   <CardHeader>
-                    <CardTitle>{service.name}</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-xl font-semibold">{service.name}</CardTitle>
+                    <CardDescription className="text-brand-gold">
                       ${service.price} • {service.duration}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-600">{service.description}</p>
+                    <p className="text-sm text-gray-600 line-clamp-3">{service.description}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full" aria-label={`Select ${service.name} service`}>
+                    <Button
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white rounded-full"
+                      aria-label={`Select ${service.name} service`}
+                    >
                       Select Service <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
               ))}
+              {services.length === 0 && (
+                <p className="text-center text-gray-500 col-span-full py-8">
+                  No services available at this time.
+                </p>
+              )}
             </div>
-          </div>
+          </motion.div>
         );
 
       case 2:
         return (
-          <div className="animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             <SectionTitle title="Choose a Specialist" align="left" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {teams.map((specialist) => (
                 <Card
                   key={specialist.id}
-                  className={`cursor-pointer transition-all ${
-                    selectedSpecialist === specialist.name
-                      ? "ring-2 ring-brand-blue"
-                      : "hover:shadow-md"
+                  className={`cursor-pointer transition-all duration-300 rounded-xl overflow-hidden ${
+                    selectedSpecialist?.id === specialist.id
+                      ? "ring-2 ring-brand-blue shadow-lg"
+                      : "hover:shadow-xl hover:scale-105"
                   }`}
                   onClick={() => handleSpecialistSelect(specialist)}
                 >
                   <div className="h-48 overflow-hidden">
                     <img
-                      src={specialist.profileImageUrl}
+                      src={specialist.profileImageUrl || "https://via.placeholder.com/400x300"}
                       alt={specialist.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
                     />
                   </div>
                   <CardHeader>
-                    <CardTitle>{specialist.name}</CardTitle>
-                    <CardDescription>{specialist.specialty}</CardDescription>
+                    <CardTitle className="text-xl font-semibold">{specialist.name}</CardTitle>
+                    <CardDescription className="text-brand-gold">
+                      {specialist.specialty}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-600 line-clamp-3">{specialist.description}</p>
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full" aria-label={`Select ${specialist.name} as specialist`}>
+                    <Button
+                      className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white rounded-full"
+                      aria-label={`Select ${specialist.name} as specialist`}
+                    >
                       Select Specialist <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
               ))}
+              {teams.length === 0 && (
+                <p className="text-center text-gray-500 col-span-full py-8">
+                  No specialists available at this time.
+                </p>
+              )}
             </div>
-          </div>
+            <div className="mt-8 flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="rounded-full"
+                aria-label="Back to services"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleReset}
+                className="rounded-full"
+                aria-label="Reset booking"
+              >
+                Reset
+              </Button>
+            </div>
+          </motion.div>
         );
 
       case 3:
         return (
-          <div className="animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             <SectionTitle title="Enter Your Name & Select a Date" align="left" />
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="mt-6 mb-8 max-w-md w-full">
+            <div className="flex flex-col items-center justify-center space-y-6 mb-8">
+              <div className="w-full max-w-md">
                 <label htmlFor="name" className="block text-lg font-medium mb-2">
                   Your Name
                 </label>
@@ -329,6 +377,7 @@ const BookingPage: React.FC = () => {
                     validateName(e.target.value);
                   }}
                   placeholder="Enter your name"
+                  className={`rounded-full ${nameError ? "border-red-500" : ""}`}
                   aria-describedby={nameError ? "name-error" : undefined}
                 />
                 {nameError && (
@@ -341,99 +390,166 @@ const BookingPage: React.FC = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={handleDateSelect}
-                className="rounded-md border bg-card p-3 w-72 pointer-events-auto"
-                disabled={(date) => date < new Date() || date.getDay() === 0}
+                className="rounded-xl border shadow-md bg-white p-4 w-80"
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
+                modifiers={{
+                  booked: (date) => {
+                    // Mock booked dates (replace with API check)
+                    const bookedDates = ["2025-04-15", "2025-04-20"];
+                    return bookedDates.includes(format(date, "yyyy-MM-dd"));
+                  },
+                }}
+                modifiersStyles={{
+                  booked: { backgroundColor: "#fee2e2", color: "#dc2626" },
+                }}
                 aria-label="Select appointment date"
               />
             </div>
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={() => setStep(2)} className="mr-2">
-                Back to Specialists
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setStep(2)}
+                className="rounded-full"
+                aria-label="Back to specialists"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button onClick={() => selectedDate && setStep(4)} disabled={!selectedDate}>
+              <Button
+                onClick={() => setStep(4)}
+                disabled={!selectedDate}
+                className="rounded-full"
+                aria-label="Continue to time selection"
+              >
                 Continue <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-          </div>
+          </motion.div>
         );
 
       case 4:
         return (
-          <div className="animate-fade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             <SectionTitle title="Select a Time" align="left" />
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-8">
               {timeSlots.map((time) => (
                 <Button
                   key={time}
                   variant={selectedTime === time ? "default" : "outline"}
                   onClick={() => handleTimeSelect(time)}
-                  className="h-12"
+                  disabled={unavailableSlots.includes(time)}
+                  className={`h-12 rounded-full transition-all ${
+                    unavailableSlots.includes(time)
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:shadow-md"
+                  }`}
                   aria-label={`Select ${time} time slot`}
                 >
                   {time}
                 </Button>
               ))}
             </div>
-            <div className="flex justify-center">
-              <Button variant="outline" onClick={() => setStep(3)} className="mr-2">
-                Back to Date
+            <div className="flex justify-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setStep(3)}
+                className="rounded-full"
+                aria-label="Back to date selection"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button onClick={() => setStep(5)} disabled={!selectedTime}>
+              <Button
+                onClick={() => setStep(5)}
+                disabled={!selectedTime}
+                className="rounded-full"
+                aria-label="Review booking"
+              >
                 Review Booking <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
-          </div>
+          </motion.div>
         );
 
       case 5:
         return (
-          <div className="animate-fade-in max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-2xl mx-auto"
+          >
             <SectionTitle title="Review & Confirm" align="left" />
-            <Card>
+            <Card className="rounded-xl shadow-lg">
               <CardHeader>
-                <CardTitle>Booking Summary</CardTitle>
+                <CardTitle className="text-2xl">Booking Summary</CardTitle>
                 <CardDescription>Please review your appointment details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Name:</span>
-                  <span>{name}</span>
+                  <span>{name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Service:</span>
-                  <span>{selectedService?.name}</span>
+                  <span>{selectedService?.name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Specialist:</span>
-                  <span>{selectedSpecialist}</span>
+                  <span>{selectedSpecialist?.name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Date:</span>
-                  <span>{selectedDate ? format(selectedDate, "PPPP") : ""}</span>
+                  <span>{selectedDate ? format(selectedDate, "PPPP") : "N/A"}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Time:</span>
-                  <span>{selectedTime}</span>
+                  <span>{selectedTime || "N/A"}</span>
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Price:</span>
-                  <span>${selectedService?.price}</span>
+                  <span>${selectedService?.price ?? "N/A"}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total:</span>
-                  <span>${selectedService?.price}</span>
+                  <span>${selectedService?.price ?? "N/A"}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(4)}>
-                  Back
+                <Button
+                  variant="outline"
+                  onClick={() => setStep(4)}
+                  className="rounded-full"
+                  aria-label="Back to time selection"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
-                <Button onClick={handleBooking} disabled={loading || !!nameError}>
-                  {loading ? "Processing..." : "Confirm Booking"}
+                <Button
+                  onClick={handleBooking}
+                  disabled={loading || !!nameError}
+                  className="rounded-full"
+                  aria-label="Confirm booking"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm Booking"
+                  )}
                 </Button>
               </CardFooter>
             </Card>
-          </div>
+          </motion.div>
         );
 
       default:
@@ -443,64 +559,101 @@ const BookingPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="bg-brand-blue text-white py-16">
+      <div className="bg-gradient-to-r from-brand-blue to-blue-700 text-white py-16">
         <div className="container-custom">
-          <h1 className="text-4xl font-bold mb-4">Book Your Appointment</h1>
-          <p className="text-xl">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-4xl md:text-5xl font-bold mb-4"
+          >
+            Book Your Appointment
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-xl md:text-2xl"
+          >
             Schedule your beauty or wellness service in a few simple steps.
-          </p>
+          </motion.p>
         </div>
       </div>
 
-      <section className="section-padding">
+      <section className="section-padding bg-gray-50">
         <div className="container-custom">
           {/* Progress Indicator */}
           <div className="mb-12">
-            <div className="flex justify-between items-center max-w-3xl mx-auto">
+            <div className="flex justify-between items-center max-w-4xl mx-auto">
               {["Service", "Specialist", "Date", "Time", "Confirm"].map((label, index) => {
                 const stepNum = index + 1;
                 const isActive = step === stepNum;
                 const isCompleted = step > stepNum;
 
                 return (
-                  <div key={label} className="flex flex-col items-center">
+                  <motion.div
+                    key={label}
+                    className="flex flex-col items-center"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white mb-2 ${
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white mb-2 transition-colors duration-300 ${
                         isActive
-                          ? "bg-brand-blue"
+                          ? "bg-brand-blue shadow-md"
                           : isCompleted
-                          ? "bg-green-500"
+                          ? "bg-green-500 shadow-md"
                           : "bg-gray-300"
                       }`}
                     >
                       {stepNum}
                     </div>
                     <span
-                      className={`text-sm ${isActive ? "text-brand-blue font-medium" : ""}`}
+                      className={`text-sm font-medium ${
+                        isActive ? "text-brand-blue" : isCompleted ? "text-green-500" : "text-gray-500"
+                      }`}
                     >
                       {label}
                     </span>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-
-            <div className="relative max-w-3xl mx-auto mt-4 hidden sm:block">
+            <div className="relative max-w-4xl mx-auto mt-4 hidden sm:block">
               <div className="absolute top-0 left-[10%] right-[10%] h-1 bg-gray-200"></div>
-              <div
-                className="absolute top-0 left-[10%] h-1 bg-brand-blue transition-all"
-                style={{ width: `${(step - 1) * 20}%` }}
-              ></div>
+              <motion.div
+                className="absolute top-0 left-[10%] h-1 bg-brand-blue"
+                animate={{ width: `${(step - 1) * 20}%` }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              />
             </div>
           </div>
 
-          {loading && step === 1 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading...</p>
-            </div>
-          ) : (
-            renderStep()
-          )}
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div
+                key="loading"
+                className="text-center py-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-brand-blue" />
+                <p className="text-gray-500 mt-4">Loading...</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderStep()}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </Layout>

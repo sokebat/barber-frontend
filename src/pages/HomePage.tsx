@@ -7,8 +7,9 @@ import TeamMemberCard from "@/components/TeamMemberCard";
 import TestimonialCard from "@/components/TestimonialCard";
 import { Button } from "@/components/ui/button";
 import { useServices } from "@/contexts/ServiceContext";
+import { useStore } from "@/contexts/StoreContext";
 import { useTeam } from "@/contexts/TeamContext";
-import { Product, Service } from "@/types";
+import { Product } from "@/types/ProductService.types";
 import { Award, Calendar, Check, Clock } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
@@ -17,30 +18,9 @@ const HomePage: React.FC = () => {
   const { teams } = useTeam();
 
   const { services } = useServices();
+  const { products } = useStore();
 
   console.log(teams, "teams");
-
-  const featuredProducts: Product[] = [
-    {
-      id: 1,
-      name: "Hydrating Shampoo",
-      description: "Premium hydrating shampoo for all hair types.",
-      price: 24.99,
-      discountPrice: 19.99,
-      imageUrl:
-        "https://images.unsplash.com/photo-1626766632648-f5e0c0a1506a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
-      categoryName: "Hair Care",
-    },
-    {
-      id: 2,
-      name: "Beard Oil",
-      description: "Nourishing beard oil for a healthy, shiny beard.",
-      price: 29.99,
-      imageUrl:
-        "https://images.unsplash.com/photo-1621607512022-6aecc4fed814?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
-      categoryName: "Beard Care",
-    },
-  ];
 
   const testimonials = [
     {
@@ -177,12 +157,6 @@ const HomePage: React.FC = () => {
               <TeamMemberCard key={member.id} member={member} />
             ))}
           </div>
-
-          <div className="text-center mt-12">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/about">View All Team Members</Link>
-            </Button>
-          </div>
         </div>
       </section>
 
@@ -195,7 +169,7 @@ const HomePage: React.FC = () => {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-            {featuredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

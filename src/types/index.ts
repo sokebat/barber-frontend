@@ -32,23 +32,7 @@ export interface Appointment {
   isApproved: boolean;
 }
 
-// Service Category
  
-
-// Service
-export interface Service {
-  id: number;
-  name: string;
-  description: string;
-  serviceImageUrl: string;
-  duration?: string;
-  price?: number;
-  categoryId?: number;
-  categoryName?: string;
-  data?: any[];
-}
-
-  
 
 // Team Member
 export interface TeamMember {

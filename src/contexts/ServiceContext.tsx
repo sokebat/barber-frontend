@@ -1,8 +1,7 @@
-// contexts/ServiceContext.tsx
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+      
+import { ServiceCategory, UIService, ServicesContextProps } from '@/types/ServiceService.types';
 import ServiceService from '@/services/service.service';
-import { ServiceCategory, ServicesContextProps, UIService } from '@/types/AppointmentService.types';
-
 const ServiceContext = createContext<ServicesContextProps | undefined>(undefined);
 
 export const useServices = () => {
@@ -45,7 +44,7 @@ export const ServiceProvider: React.FC<ServicesProviderProps> = ({ children }) =
             serviceImageUrl: item.image || category.serviceImageUrl,
             price: item.price,
             type: item.type,
-            duration: '30 min', // Default duration, consider adding to API if needed
+            duration:  '30 min', // Use backend duration, fallback to default
             categoryId: category.id,
             categoryName: category.name,
           }))
@@ -75,7 +74,7 @@ export const ServiceProvider: React.FC<ServicesProviderProps> = ({ children }) =
       const matchesSearch = searchTerm === '' || 
         service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        service.categoryName.toLowerCase().includes(searchTerm.toLowerCase())
+        service.categoryName.toLowerCase().includes(searchTerm.toLowerCase());
         
       return matchesCategory && matchesSearch;
     });
@@ -95,9 +94,9 @@ export const ServiceProvider: React.FC<ServicesProviderProps> = ({ children }) =
     error,
     setSelectedCategory,
     setSearchTerm,
+    fetchServices,
     filteredServices,
     resetFilters,
-    fetchServices,
   };
 
   return <ServiceContext.Provider value={value}>{children}</ServiceContext.Provider>;
