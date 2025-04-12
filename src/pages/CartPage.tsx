@@ -111,14 +111,14 @@ const CartPage: React.FC = () => {
                       {item.product.discountPrice ? (
                         <div>
                           <span className="text-red-500 font-medium">
-                            ${item.product.discountPrice.toFixed(2)}
+                            NPR{" "}{item.product.discountPrice.toFixed(2)}
                           </span>
                           <span className="text-gray-400 line-through text-sm block">
-                            ${item.product.price.toFixed(2)}
+                            NPR{" "}{item.product.price.toFixed(2)}
                           </span>
                         </div>
                       ) : (
-                        <span>${item.product.price.toFixed(2)}</span>
+                        <span>NPR{" "}{item.product.price.toFixed(2)}</span>
                       )}
                     </div>
 
@@ -153,7 +153,7 @@ const CartPage: React.FC = () => {
                     </div>
 
                     <div className="col-span-2 text-right font-medium">
-                      ${((item.product.discountPrice || item.product.price) * item.quantity).toFixed(2)}
+                      NPR{((item.product.discountPrice || item.product.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
                   <Separator />
@@ -184,7 +184,7 @@ const CartPage: React.FC = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span>${cart.total.toFixed(2)}</span>
+                  <span>NPR{" "}  {cart.total.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between">
@@ -196,7 +196,7 @@ const CartPage: React.FC = () => {
 
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span>${cart.total.toFixed(2)}</span>
+                  <span>NPR{" "}  {cart.total.toFixed(2)}</span>
                 </div>
               </div>
 

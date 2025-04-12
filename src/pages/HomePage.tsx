@@ -24,24 +24,25 @@ const HomePage: React.FC = () => {
 
   const testimonials = [
     {
-      name: "Emily Johnson",
+      name: "Sita Sharma",
       rating: 5,
       text: "The haircut I received was absolutely amazing! The stylist understood exactly what I wanted and delivered beyond my expectations.",
       date: "April 2, 2025",
     },
     {
-      name: "Michael Thompson",
+      name: "Ram Thapa",
       rating: 5,
       text: "The massage was incredibly relaxing. I've been to many spas, but this experience was truly exceptional. Will definitely come back!",
       date: "March 25, 2025",
     },
     {
-      name: "Sarah Parker",
+      name: "Gita Adhikari",
       rating: 4,
       text: "Wonderful facial treatment. My skin feels rejuvenated and looks much better. The staff was very professional and friendly.",
       date: "April 5, 2025",
     },
   ];
+  
 
   return (
     <Layout>
@@ -152,7 +153,7 @@ const HomePage: React.FC = () => {
             subtitle="Our team of skilled professionals is dedicated to providing you with exceptional service and care."
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teams.map((member) => (
               <TeamMemberCard key={member.id} member={member} />
             ))}

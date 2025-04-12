@@ -257,7 +257,7 @@ const BookingPage: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="text-xl font-semibold">{service.name}</CardTitle>
                     <CardDescription className="text-brand-gold">
-                      ${service.price} • {service.duration}
+                      NPR{" "}  {service.price} • {service.duration}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -302,11 +302,11 @@ const BookingPage: React.FC = () => {
                   }`}
                   onClick={() => handleSpecialistSelect(specialist)}
                 >
-                  <div className="h-48 overflow-hidden">
+                  <div className="h-60 overflow-hidden">
                     <img
                       src={specialist.profileImageUrl || "https://via.placeholder.com/400x300"}
                       alt={specialist.name}
-                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                      className="h-56 w-full  object-cover transition-transform duration-500 hover:scale-110"
                     />
                   </div>
                   <CardHeader>
@@ -516,11 +516,11 @@ const BookingPage: React.FC = () => {
                 </div>
                 <div className="flex justify-between border-b pb-2">
                   <span className="font-medium">Price:</span>
-                  <span>${selectedService?.price ?? "N/A"}</span>
+                  <span>NPR{" "}{selectedService?.price ?? "N/A"}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total:</span>
-                  <span>${selectedService?.price ?? "N/A"}</span>
+                  <span>NPR{" "}{selectedService?.price ?? "N/A"}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">

@@ -14,7 +14,7 @@ import {
 import { useCart } from "@/contexts/CartContext";
 import ProductCard from "@/components/ProductCard";
 import ProductService from "@/services/product.service";
-import { useStore } from "@/contexts/storeContext";
+import { useStore } from "@/contexts/StoreContext";
 
 const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -163,17 +163,19 @@ const ProductDetailPage: React.FC = () => {
               <div className="flex items-center gap-3 mb-6">
                 {product.discountPrice ? (
                   <>
-                    <span className="text-2xl font-bold">${product.price-product.discountPrice}</span>
+                    <span className="text-2xl font-bold">
+                      NPR{" "}{product.price - product.discountPrice}
+                    </span>
                     <span className="text-gray-500 line-through">
-                      ${product.price}
+                      NPR{" "}{product.price}
                     </span>
                     <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
-                      Save ${product.discountPrice}
+                      Save NPR{" "}{product.discountPrice}
                     </span>
                   </>
                 ) : (
                   <span className="text-2xl font-bold">
-                    ${product.price.toFixed(2)}
+                    NPR{product.price.toFixed(2)}
                   </span>
                 )}
               </div>

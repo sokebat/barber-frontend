@@ -236,14 +236,14 @@ const CheckoutPage: React.FC = () => {
                       {item.product.categoryName}
                     </p>
                     <p className="text-sm">
-                      Quantity: {item.quantity} x $
+                      Quantity: {item.quantity} x NPR{" "}
                       {(
                         item.product.discountPrice || item.product.price
                       ).toFixed(2)}
                     </p>
                   </div>
                   <p className="font-medium">
-                    $
+                    NPR {" "}
                     {(
                       (item.product.discountPrice || item.product.price) *
                       item.quantity
@@ -254,7 +254,7 @@ const CheckoutPage: React.FC = () => {
               <Separator className="my-4" />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
-                <span>${cart.total.toFixed(2)}</span>
+                <span>NPR {" "} {cart.total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -395,7 +395,7 @@ const CheckoutPage: React.FC = () => {
                     You will be redirected to eSewa to complete your payment.
                   </p>
                   <p className="font-medium mt-2">
-                    Total Amount: ${cart.total.toFixed(2)}
+                    Total Amount: NPR{cart.total.toFixed(2)}
                   </p>
                 </div>
                 <Button

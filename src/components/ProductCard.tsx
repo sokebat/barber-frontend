@@ -43,15 +43,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             {product.discountPrice ? (
               <>
                 <span className="font-semibold text-lg">
-                  ${product.price.toFixed(2)}
+                  NPR{" "} {product.price.toFixed(2)}
                 </span>
                 <span className="text-gray-500 line-through text-sm">
-                  ${product.price.toFixed(2) + product.discountPrice}
+                  NPR{" "} {product.price.toFixed(2) + product.discountPrice}
                 </span>
               </>
             ) : (
               <span className="font-semibold text-lg">
-                ${product.price.toFixed(2)}
+                NPR {" "} {product.price.toFixed(2)}
               </span>
             )}
           </div>

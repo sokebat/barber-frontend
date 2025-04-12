@@ -1,4 +1,4 @@
-import { useStore } from "@/contexts/storeContext";
+import { useStore } from "@/contexts/StoreContext";
 import ProductService from "@/services/product.service";
 import {
   CreateProductDto,
@@ -312,11 +312,11 @@ const ProductsTab = () => {
                       {product.name}
                     </TableCell>
                     <TableCell>{product.categoryName || "Unknown"}</TableCell>
-                    <TableCell>${product.price.toFixed(2)}</TableCell>
+                    <TableCell>NPR {" "}{product.price.toFixed(2)}</TableCell>
                     <TableCell>
                       {product.discountPrice ? (
                         <Badge variant="secondary">
-                          ${product.discountPrice.toFixed(2)}
+                          NPR {" "}{product.discountPrice.toFixed(2)}
                         </Badge>
                       ) : (
                         <span className="text-gray-500">-</span>

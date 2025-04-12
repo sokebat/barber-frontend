@@ -57,8 +57,8 @@ const ContactPage: React.FC = () => {
                   <MapPin className="w-6 h-6 text-brand-blue mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg">Address</h3>
-                    <p>123 Beauty Lane</p>
-                    <p>Wellness City, WC 12345</p>
+                     <p>Nawalpur, Nepal</p>
+                    <p>Nawalpur, Nepal</p>
                   </div>
                 </div>
                 
@@ -66,7 +66,7 @@ const ContactPage: React.FC = () => {
                   <Phone className="w-6 h-6 text-brand-blue mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg">Phone</h3>
-                    <p>(555) 123-4567</p>
+                    <p>+977 9860000000</p>
                   </div>
                 </div>
                 
@@ -74,7 +74,7 @@ const ContactPage: React.FC = () => {
                   <Mail className="w-6 h-6 text-brand-blue mt-1" />
                   <div>
                     <h3 className="font-semibold text-lg">Email</h3>
-                    <p>info@salonsuite.com</p>
+                      <p>info@salonsuite.com</p>
                   </div>
                 </div>
                 

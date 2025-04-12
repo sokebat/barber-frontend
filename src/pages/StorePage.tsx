@@ -3,7 +3,7 @@ import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { useStore } from "@/contexts/storeContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Search, SlidersHorizontal } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
@@ -148,7 +148,7 @@ const StorePage: React.FC = () => {
 
                 <div className="mb-6">
                   <h4 className="font-medium mb-2">
-                    Price Range: ${priceRange[0]} - ${priceRange[1]}
+                    Price Range:  NPR {priceRange[0]} - NPR {priceRange[1]}
                   </h4>
                   <div className="px-2">
                     <Slider
